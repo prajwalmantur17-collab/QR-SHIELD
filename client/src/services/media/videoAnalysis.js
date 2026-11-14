@@ -120,10 +120,10 @@ export async function analyzeVideoAuthenticity(file, onProgress) {
   for (let idx = 0; idx < sampleCount; idx++) {
     const targetTime = (idx + 1) * interval;
     if (onProgress) {
-      onProgress({
-        step: `Extracting and analyzing frame ${idx + 1} of ${sampleCount}...`,
-        progress: Math.round(((idx + 1) / sampleCount) * 80)
-      });
+      onProgress(
+        Math.round(((idx + 1) / sampleCount) * 80),
+        `Extracting and analyzing frame ${idx + 1} of ${sampleCount}...`
+      );
     }
 
     // Seek to frame timestamp
@@ -204,7 +204,7 @@ export async function analyzeVideoAuthenticity(file, onProgress) {
   // Optional: Extract audio track from video if available
   let audioAnalysis = null;
   if (onProgress) {
-    onProgress({ step: 'Analyzing accompanying audio stream...', progress: 90 });
+    onProgress(90, 'Analyzing accompanying audio stream...');
   }
 
   try {
@@ -222,7 +222,7 @@ export async function analyzeVideoAuthenticity(file, onProgress) {
   URL.revokeObjectURL(objectUrl);
 
   if (onProgress) {
-    onProgress({ step: 'Synthesizing technical findings...', progress: 100 });
+    onProgress(100, 'Synthesizing technical findings...');
   }
 
   return {
@@ -235,6 +235,7 @@ export async function analyzeVideoAuthenticity(file, onProgress) {
     aspectRatio,
     estimatedBitrateKbps,
     sampleCount,
+    totalSampledFrames: sampleCount,
     duplicateRatio: parseFloat(duplicateRatio.toFixed(1)),
     identicalFrameCount,
     abruptTransitions,

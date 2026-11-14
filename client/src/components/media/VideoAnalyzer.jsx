@@ -44,9 +44,14 @@ export default function VideoAnalyzer({ onAuditSaved }) {
 
     try {
       // 1. Analyze Video with frame sampling & luminance/MSE calculations
-      const videoMetrics = await analyzeVideoFile(selectedFile, (pct, status) => {
-        setProgress(pct);
-        setStatusText(status);
+      const videoMetrics = await analyzeVideoFile(selectedFile, (progressVal, statusVal) => {
+        if (typeof progressVal === 'object' && progressVal !== null) {
+          setProgress(typeof progressVal.progress === 'number' ? progressVal.progress : 0);
+          setStatusText(typeof progressVal.step === 'string' ? progressVal.step : '');
+        } else {
+          setProgress(typeof progressVal === 'number' ? progressVal : 0);
+          setStatusText(typeof statusVal === 'string' ? statusVal : '');
+        }
       });
 
       // 2. Score Authenticity Heuristics

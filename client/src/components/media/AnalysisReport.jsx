@@ -472,7 +472,7 @@ ${disclaimer || 'This report identifies technical irregularities. It cannot conc
             <div className="p-3.5 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border">
               <span className="text-[11px] text-content-muted dark:text-dark-secondaryText block">Sampled Frames</span>
               <span className="text-base font-mono font-bold text-content-primary dark:text-dark-primary">
-                {mediaMetrics.totalSampledFrames} frames
+                {mediaMetrics.totalSampledFrames || mediaMetrics.sampleCount || mediaMetrics.frameReel?.length || 0} frames
               </span>
             </div>
 

@@ -44,9 +44,14 @@ export default function VoiceAnalyzer({ onAuditSaved }) {
 
     try {
       // 1. Analyze Audio with signal processing
-      const audioMetrics = await analyzeAudioFile(selectedFile, (pct, status) => {
-        setProgress(pct);
-        setStatusText(status);
+      const audioMetrics = await analyzeAudioFile(selectedFile, (progressVal, statusVal) => {
+        if (typeof progressVal === 'object' && progressVal !== null) {
+          setProgress(typeof progressVal.progress === 'number' ? progressVal.progress : 0);
+          setStatusText(typeof progressVal.step === 'string' ? progressVal.step : '');
+        } else {
+          setProgress(typeof progressVal === 'number' ? progressVal : 0);
+          setStatusText(typeof statusVal === 'string' ? statusVal : '');
+        }
       });
 
       // 2. Score Authenticity Heuristics
