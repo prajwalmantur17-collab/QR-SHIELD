@@ -21,22 +21,27 @@ export default {
         },
         content: {
           primary: '#202B35',
-          secondary: '#687782',
+          secondary: '#5F6D7E',
           muted: '#89959D',
+          subtle: '#A0ACB6',
           white: '#FFFFFF',
         },
         brand: {
           teal: {
             DEFAULT: '#167D73',
             hover: '#12645C',
+            active: '#0E534D',
             subtle: '#E7F3F1',
             text: '#0E534D',
+            border: '#B6DDD8',
           },
           blue: {
             DEFAULT: '#527DA8',
             hover: '#43668A',
+            active: '#345271',
             subtle: '#EDF3F8',
             text: '#345271',
+            border: '#BDD2E6',
           }
         },
         status: {
@@ -75,17 +80,25 @@ export default {
         mono: ['JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', 'monospace'],
       },
       boxShadow: {
+        'hairline': '0 0 0 1px rgba(16, 24, 40, 0.06)',
         'subtle': '0 1px 2px 0 rgba(16, 24, 40, 0.04)',
-        'card': '0 1px 3px 0 rgba(16, 24, 40, 0.06), 0 1px 2px -1px rgba(16, 24, 40, 0.04)',
+        'card': '0 1px 3px 0 rgba(16, 24, 40, 0.05), 0 1px 2px -1px rgba(16, 24, 40, 0.03)',
+        'card-hover': '0 4px 12px 0 rgba(16, 24, 40, 0.06), 0 2px 4px -1px rgba(16, 24, 40, 0.03)',
         'elevated': '0 4px 6px -1px rgba(16, 24, 40, 0.06), 0 2px 4px -2px rgba(16, 24, 40, 0.04)',
         'dropdown': '0 10px 15px -3px rgba(16, 24, 40, 0.08), 0 4px 6px -4px rgba(16, 24, 40, 0.04)',
         'modal': '0 20px 25px -5px rgba(16, 24, 40, 0.1), 0 8px 10px -6px rgba(16, 24, 40, 0.04)',
       },
       borderRadius: {
-        'lg': '0.5rem',
+        'sm': '0.375rem',
+        'md': '0.5rem',
+        'lg': '0.625rem',
         'xl': '0.75rem',
         '2xl': '1rem',
         '3xl': '1.25rem',
+      },
+      spacing: {
+        'sidebar-expanded': '248px',
+        'sidebar-collapsed': '68px',
       }
     },
   },
