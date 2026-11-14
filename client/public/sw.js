@@ -1,7 +1,9 @@
-const CACHE_NAME = 'qrshield-v2';
+const CACHE_NAME = 'qrshield-v4';
 
 // Assets safe to cache (static only)
 const STATIC_ASSETS = [
+  '/',
+  '/index.html',
   '/manifest.webmanifest',
   '/icon-192.png',
   '/icon-512.png'
@@ -46,9 +48,16 @@ self.addEventListener('fetch', (event) => {
         .then((response) => {
           return response;
         })
-        .catch(() => {
-          return caches.match('/index.html') || caches.match('/');
-        })
+        .catch(() =>
+          // `caches.match()` returns a Promise (always truthy), so the old `a || b` never reached the
+          // fallback and respondWith() received undefined while offline. Chain them properly instead.
+          caches.match('/index.html')
+            .then((cached) => cached || caches.match('/'))
+            .then((cached) => cached || new Response('QR Shield is offline. Please reconnect and try again.', {
+              status: 503,
+              headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+            }))
+        )
     );
     return;
   }

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShieldAlert,
   ShieldCheck,
-  DollarSign, 
+  IndianRupee, 
   MessageSquare, 
   QrCode, 
   Briefcase, 
@@ -32,6 +32,9 @@ import {
 import Card from '../components/common/Card';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
+import PageHeader from '../components/layout/PageHeader';
+import usePageTitle from '../hooks/usePageTitle';
+import { useAuth } from '../context/AuthContext';
 import { SAMPLES } from '../components/scan/SampleCards';
 
 // Preserved & Enriched Scam Intelligence Guides
@@ -40,8 +43,8 @@ export const SCAM_GUIDES = [
     id: 'upi-scam',
     title: 'Disguised UPI "Collect" QR Codes',
     category: 'Payment Scams',
-    icon: DollarSign,
-    badgeVariant: 'danger',
+    icon: IndianRupee,
+    badgeVariant: 'dangerous',
     riskLevel: 'Critical Risk',
     attackVector: 'Payment Protocol Deception',
     targetMedium: 'UPI / Mobile Banking',
@@ -65,7 +68,7 @@ export const SCAM_GUIDES = [
     title: 'Urgent Bank / KYC Suspension SMS',
     category: 'Phishing & KYC',
     icon: MessageSquare,
-    badgeVariant: 'danger',
+    badgeVariant: 'dangerous',
     riskLevel: 'Critical Risk',
     attackVector: 'Credential Harvesting',
     targetMedium: 'SMS / Fake Portals',
@@ -89,7 +92,7 @@ export const SCAM_GUIDES = [
     title: 'Physical Sticker Tampering (Quishing)',
     category: 'Physical Quishing',
     icon: QrCode,
-    badgeVariant: 'warning',
+    badgeVariant: 'suspicious',
     riskLevel: 'High Risk',
     attackVector: 'Counterfeit Physical Media',
     targetMedium: 'Public Signs / Meters',
@@ -113,7 +116,7 @@ export const SCAM_GUIDES = [
     title: 'Telegram "YouTube Video Like" Job Scam',
     category: 'Job Scams',
     icon: Briefcase,
-    badgeVariant: 'warning',
+    badgeVariant: 'suspicious',
     riskLevel: 'High Risk',
     attackVector: 'Task Advance-Fee Fraud',
     targetMedium: 'WhatsApp / Telegram',
@@ -137,7 +140,7 @@ export const SCAM_GUIDES = [
     title: 'AnyDesk / Screen Share Customer Care Trap',
     category: 'Remote Access',
     icon: Laptop,
-    badgeVariant: 'danger',
+    badgeVariant: 'dangerous',
     riskLevel: 'Critical Risk',
     attackVector: 'Remote Device Takeover',
     targetMedium: 'Phone Call / Remote Apps',
@@ -218,7 +221,9 @@ const CHALLENGE_SCENARIOS = [
 ];
 
 export default function AwarenessPage() {
+  usePageTitle('Scam Awareness');
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [expandedCard, setExpandedCard] = useState('upi-scam');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -294,40 +299,25 @@ export default function AwarenessPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-10 pb-16">
+    <div className="max-w-4xl mx-auto space-y-8 pb-16">
       
       {/* ============================================================
           SECTION 01: COMPACT PAGE HEADER
           ============================================================ */}
-      <header className="pb-5 border-b border-border dark:border-dark-border flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div className="space-y-1.5 max-w-2xl">
-          <div className="flex items-center space-x-2">
-            <div className="w-7 h-7 rounded-lg bg-brand-teal text-white flex items-center justify-center shadow-subtle">
-              <ShieldAlert className="w-4 h-4" />
-            </div>
-            <span className="text-[11px] font-mono font-bold tracking-wider uppercase text-brand-teal">
-              Security Intelligence Platform
-            </span>
+      <PageHeader
+        title="Scam Awareness & Threat Intelligence"
+        description="Understand modern scams, recognize deceptive tactics and learn how to protect yourself from digital threats."
+        right={
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="teal" size="sm" dot>
+              {SCAM_GUIDES.length} Verified Modules
+            </Badge>
+            <Badge variant="neutral" size="sm">
+              Zero-Knowledge Defense
+            </Badge>
           </div>
-          
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-content-primary dark:text-dark-primary tracking-tight">
-            Scam Awareness & Threat Intelligence
-          </h1>
-          
-          <p className="text-xs sm:text-sm text-content-secondary dark:text-dark-secondaryText leading-relaxed">
-            Understand modern scams, recognize deceptive tactics and learn how to protect yourself from digital threats.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
-          <Badge variant="teal" size="sm" dot>
-            {SCAM_GUIDES.length} Verified Modules
-          </Badge>
-          <Badge variant="neutral" size="sm">
-            Zero-Knowledge Defense
-          </Badge>
-        </div>
-      </header>
+        }
+      />
 
 
       {/* ============================================================
@@ -514,7 +504,7 @@ export default function AwarenessPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search scams, threat indicators, attack methods or tactics..."
-              className="w-full pl-10 pr-10 py-3 rounded-xl bg-white dark:bg-dark-surface border border-border dark:border-dark-border text-xs sm:text-sm text-content-primary dark:text-dark-primary placeholder:text-content-muted focus:outline-none focus:border-brand-teal shadow-subtle transition-all"
+              className="w-full pl-10 pr-10 py-3 rounded-xl bg-white dark:bg-dark-surface border border-border dark:border-dark-border text-base sm:text-sm text-content-primary dark:text-dark-primary placeholder:text-content-muted focus:outline-none focus:border-brand-teal shadow-subtle transition-all"
             />
             <Search className="w-4 h-4 text-content-muted absolute left-3.5 pointer-events-none" />
             {searchQuery && (
@@ -612,9 +602,12 @@ export default function AwarenessPage() {
                   }`}
                 >
                   {/* Collapsed Header / Trigger */}
-                  <div
+                  <button
+                    type="button"
+                    aria-expanded={isExpanded}
+                    aria-controls={`threat-profile-${guide.id}`}
                     onClick={() => toggleExpand(guide.id)}
-                    className="p-5 sm:p-6 cursor-pointer select-none flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    className="w-full text-left p-5 sm:p-6 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                   >
                     <div className="flex items-start space-x-4">
                       <div className="w-10 h-10 rounded-xl bg-canvas-subtle dark:bg-dark-secondary text-brand-teal flex items-center justify-center flex-shrink-0 border border-border dark:border-dark-border shadow-subtle">
@@ -652,12 +645,13 @@ export default function AwarenessPage() {
                         {isExpanded ? <ChevronUp className="w-4 h-4 text-brand-teal" /> : <ChevronDown className="w-4 h-4" />}
                       </div>
                     </div>
-                  </div>
+                  </button>
 
                   {/* Structured Expanded Threat Profile */}
                   <AnimatePresence>
                     {isExpanded && (
                       <motion.div
+                        id={`threat-profile-${guide.id}`}
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
@@ -807,7 +801,7 @@ export default function AwarenessPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Card padding="md" className="space-y-2 border-border dark:border-dark-border">
             <div className="w-8 h-8 rounded-lg bg-brand-teal-subtle text-brand-teal flex items-center justify-center">
-              <DollarSign className="w-4 h-4" />
+              <IndianRupee className="w-4 h-4" />
             </div>
             <h4 className="text-xs font-bold text-content-primary dark:text-dark-primary">
               1. The PIN Rule (UPI)
@@ -855,9 +849,16 @@ export default function AwarenessPage() {
               ONE-CLICK SECURITY SIMULATIONS
             </h2>
           </div>
-          <span className="text-[11px] text-content-muted dark:text-dark-muted font-mono">
-            Explore realistic attack scenarios & detection heuristics
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] text-content-muted dark:text-dark-muted font-mono">
+              Explore realistic attack scenarios & detection heuristics
+            </span>
+            {!isAuthenticated && (
+              <span className="text-[11px] text-content-muted dark:text-dark-muted italic">
+                (Runs a real scan - counts toward your daily limit)
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">

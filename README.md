@@ -37,12 +37,12 @@ flowchart TD
     end
 
     subgraph Backend ["Backend Gateway (Node.js + Express)"]
-        Rate["Rate Limiter (Guests 5/day, Auth 60/hr)"]
+        Rate["Rate Limiter (Guests 5/day, Auth 1440/day)"]
         Crypto["Privacy Engine (Salted HMAC-SHA-256)"]
         SSRF["SSRF-Safe Redirect Follower (Max 5 Hops)"]
         UPI["UPI Protocol Parser (Collect vs Pay)"]
         Rules["Deterministic Rule Heuristic Engine"]
-        AI["Google Gemini 1.5 Threat Analyzer (8s SLA)"]
+        AI["Google Gemini Threat Analyzer (8s SLA)"]
         Merge["Score Merger (Rules 55% + AI 45%)"]
 
         Rate --> Crypto
@@ -76,7 +76,8 @@ flowchart TD
 - **🔗 SSRF-Protected Link Expander:** Recursively follows shortened redirects (bit.ly, tinyurl, etc.) up to 5 hops, blocking loopback, link-local, and private IP spaces.
 - **💬 WhatsApp / SMS Message NLP:** Unpacks messages for coercive urgency, digital arrest threats, remote-access app solicitations (AnyDesk, TeamViewer), and OTP/PIN requests.
 - **📱 PWA Share-to-Scan (`/share`):** Installable progressive web app featuring a `share_target` in the manifest. Share directly from WhatsApp or Messages into QR Shield.
-- **🌐 Safe Link Preview (Air-Gap Sandbox):** Inspects suspicious websites visually in an isolated cloud sandbox without exposing client IP, cookies, or device execution. Protected with DNS resolution anti-SSRF defenses and protocol whitelisting.
+- **🌐 Safe Link Preview:** Inspects suspicious websites visually via third-party screenshot services without exposing client IP, cookies, or device execution. Protected with destination IP validation, anti-SSRF defenses, and protocol whitelisting.
+- **🎙️ Media Authenticity Analyzer (`/media`):** Local in-browser signal processing and heuristic analysis for voice recordings (pitch trajectory, ambient noise floor, spectral rolloff) and video clips (frame MSE, frozen frame detection, luminance continuity) using the browser's native Web Audio API and HTML5 Canvas with zero cloud upload.
 - **🛡️ Explainable Verdict Card:** Semicircle animated risk gauge (0–100), verdict badge (`Safe` / `Suspicious` / `Dangerous`), redirect stepper, and dual-tagged signals (`[RULE]` vs `[AI]`).
 - **👥 Community Scam Blacklist:** 1-click "Report as scam" adds domain hashes to a crowdsourced blacklist, immediately raising the risk score for future scans.
 - **📊 Real-Time Analytics Dashboard:** Interactive Recharts donut charts, 7-day velocity line charts, top threat categories, and personal masked history.

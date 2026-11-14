@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   QrCode, 
@@ -9,12 +9,7 @@ import {
   ArrowRight, 
   AlertCircle,
   Info,
-  Check,
-  ShieldCheck,
-  Sparkles,
-  RefreshCw,
-  Globe,
-  SlidersHorizontal
+  Check
 } from 'lucide-react';
 import api from '../api/client';
 import QrScanner from '../components/scan/QrScanner';
@@ -25,14 +20,22 @@ import Tabs from '../components/common/Tabs';
 import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
 import Card from '../components/common/Card';
+import PageHeader from '../components/layout/PageHeader';
+import VoiceAssistant from '../components/voice/VoiceAssistant';
+import { voiceAssistant } from '../services/voice/voiceAssistant';
+import usePageTitle from '../hooks/usePageTitle';
 
 export default function ScanPage() {
+  usePageTitle('Threat Scanner');
+  const location = useLocation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('qr'); // 'qr' | 'link' | 'message'
   const [urlInput, setUrlInput] = useState('');
   const [messageInput, setMessageInput] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [errorStatus, setErrorStatus] = useState(null);
   const [pastedNotice, setPastedNotice] = useState(false);
 
   const tabsConfig = [
@@ -67,6 +70,7 @@ export default function ScanPage() {
     }
     setIsScanning(true);
     setErrorMsg(null);
+    setErrorStatus(null);
     setScanResult(null);
 
     try {
@@ -78,9 +82,13 @@ export default function ScanPage() {
         finalUrl: res.data.finalUrl || normalized,
         domain: res.data.domain || normalized.replace(/^https?:\/\//i, '').split('/')[0]
       });
+      // Announce verdict automatically in selected language
+      voiceAssistant.announce(res.data.verdict, res.data.contentHash);
     } catch (err) {
       const msg = err.response?.data?.error || 'Failed to analyze URL. Please check your internet connection.';
       setErrorMsg(msg);
+      setErrorStatus(err.response?.status || null);
+      voiceAssistant.announce('failed');
     } finally {
       setIsScanning(false);
     }
@@ -92,6 +100,7 @@ export default function ScanPage() {
     const trimmed = decodedText.trim();
     setIsScanning(true);
     setErrorMsg(null);
+    setErrorStatus(null);
     setScanResult(null);
 
     try {
@@ -114,9 +123,13 @@ export default function ScanPage() {
         finalUrl: res.data.finalUrl || rawUrl,
         domain: res.data.domain || (rawUrl ? rawUrl.replace(/^https?:\/\//i, '').split('/')[0] : undefined)
       });
+      // Announce verdict automatically in selected language
+      voiceAssistant.announce(res.data.verdict, res.data.contentHash);
     } catch (err) {
       const msg = err.response?.data?.error || 'Failed to analyze QR code content.';
       setErrorMsg(msg);
+      setErrorStatus(err.response?.status || null);
+      voiceAssistant.announce('failed');
     } finally {
       setIsScanning(false);
     }
@@ -131,6 +144,7 @@ export default function ScanPage() {
     }
     setIsScanning(true);
     setErrorMsg(null);
+    setErrorStatus(null);
     setScanResult(null);
 
     try {
@@ -142,9 +156,13 @@ export default function ScanPage() {
         finalUrl: res.data.finalUrl || (urlMatch ? urlMatch[0] : undefined),
         domain: res.data.domain || (urlMatch ? urlMatch[0].replace(/^https?:\/\//i, '').split('/')[0] : undefined)
       });
+      // Announce verdict automatically in selected language
+      voiceAssistant.announce(res.data.verdict, res.data.contentHash);
     } catch (err) {
       const msg = err.response?.data?.error || 'Failed to scan message. Please try again.';
       setErrorMsg(msg);
+      setErrorStatus(err.response?.status || null);
+      voiceAssistant.announce('failed');
     } finally {
       setIsScanning(false);
     }
@@ -168,16 +186,19 @@ export default function ScanPage() {
   };
 
   // Auto-load benchmark if navigated from Awareness Page
-  const location = useLocation();
   useEffect(() => {
     if (location.state?.sample) {
-      handleSelectSample(location.state.sample);
+      const sample = location.state.sample;
+      navigate('/scan', { replace: true, state: null });
+      handleSelectSample(sample);
     }
-  }, [location.state]);
+  }, [location.state, navigate]);
 
   const handleResetScan = () => {
+    voiceAssistant.stop();
     setScanResult(null);
     setErrorMsg(null);
+    setErrorStatus(null);
     setUrlInput('');
     setMessageInput('');
   };
@@ -185,23 +206,16 @@ export default function ScanPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       
-      {/* 1. Page Header with Status Chip */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-border dark:border-dark-border">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-content-primary dark:text-dark-primary tracking-tight">
-            Threat Scanner & Inspector
-          </h1>
-          <p className="text-xs text-content-secondary dark:text-dark-secondaryText mt-0.5">
-            Real-time heuristic & AI verification with SSRF containment and zero raw storage.
-          </p>
-        </div>
+      {/* 1. Page Header */}
+      <PageHeader
+        title="Threat Scanner"
+        description="Real-time heuristic & AI verification with SSRF containment and zero raw storage."
+      />
 
-        <div className="flex items-center space-x-2">
-          <Badge variant="teal" size="sm" dot>SSRF Firewall Ready</Badge>
-        </div>
-      </div>
+      {/* 2. Multilingual AI Voice Assistant Control Deck */}
+      <VoiceAssistant />
 
-      {/* 2. Main Scanner Workspace */}
+      {/* 3. Main Scanner Workspace */}
       <div className="relative">
         <AnimatePresence mode="wait">
           {scanResult ? (
@@ -232,15 +246,23 @@ export default function ScanPage() {
 
               {/* Error Notice */}
               {errorMsg && (
-                <div className="p-3.5 rounded-xl bg-status-danger-bg border border-status-danger-border text-status-danger text-xs flex items-center justify-between">
+                <div className="p-3.5 rounded-xl bg-status-danger-bg border border-status-danger-border text-status-danger text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center space-x-2.5">
                     <AlertCircle className="w-4 h-4 flex-shrink-0" />
                     <span>{errorMsg}</span>
+                    {errorStatus === 429 && (
+                      <Link
+                        to="/register"
+                        className="ml-2 font-bold underline hover:text-red-800 dark:hover:text-red-300"
+                      >
+                        Create free account
+                      </Link>
+                    )}
                   </div>
                   <button
                     type="button"
-                    onClick={() => setErrorMsg(null)}
-                    className="text-status-danger hover:underline text-[11px] font-semibold"
+                    onClick={() => { setErrorMsg(null); setErrorStatus(null); }}
+                    className="text-status-danger hover:underline text-[11px] font-semibold self-end sm:self-auto"
                   >
                     Dismiss
                   </button>
@@ -259,7 +281,7 @@ export default function ScanPage() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-semibold text-content-primary dark:text-dark-primary">
+                      <label htmlFor="scan-url-input" className="text-xs font-semibold text-content-primary dark:text-dark-primary">
                         Enter Website Address or Shortened Link
                       </label>
                       <button
@@ -274,12 +296,13 @@ export default function ScanPage() {
 
                     <div className="relative flex items-center">
                       <input
+                        id="scan-url-input"
                         type="url"
                         value={urlInput}
                         onChange={(e) => setUrlInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleScanLink()}
                         placeholder="https://example.com or bit.ly/..."
-                        className="w-full px-4 py-3 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border text-content-primary dark:text-dark-primary placeholder:text-content-muted font-mono text-xs sm:text-sm focus:outline-none focus:border-brand-teal pr-28 transition-colors"
+                        className="w-full px-4 py-3 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border text-content-primary dark:text-dark-primary placeholder:text-content-muted font-mono text-base sm:text-sm focus:outline-none focus:border-brand-teal pr-28 transition-colors"
                       />
                       <Button
                         size="sm"
@@ -307,7 +330,7 @@ export default function ScanPage() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-semibold text-content-primary dark:text-dark-primary">
+                      <label htmlFor="scan-message-input" className="text-xs font-semibold text-content-primary dark:text-dark-primary">
                         Paste Full Text Message (WhatsApp, SMS, Telegram)
                       </label>
                       <button
@@ -322,12 +345,13 @@ export default function ScanPage() {
 
                     <div className="relative">
                       <textarea
+                        id="scan-message-input"
                         rows={5}
                         maxLength={5000}
                         value={messageInput}
                         onChange={(e) => setMessageInput(e.target.value)}
                         placeholder="Paste suspicious text message here to check for urgency coercion, fake KYC alerts, or OTP theft..."
-                        className="w-full p-3.5 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border text-content-primary dark:text-dark-primary placeholder:text-content-muted text-xs sm:text-sm focus:outline-none focus:border-brand-teal transition-colors"
+                        className="w-full p-3.5 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border text-content-primary dark:text-dark-primary placeholder:text-content-muted text-base sm:text-sm focus:outline-none focus:border-brand-teal transition-colors"
                       />
                       <span className="absolute bottom-2.5 right-3 text-[10px] font-mono text-content-muted dark:text-dark-muted">
                         {messageInput.length} / 5,000
@@ -338,7 +362,7 @@ export default function ScanPage() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
                     <span className="text-[11px] text-content-muted dark:text-dark-muted flex items-center space-x-1.5">
                       <Info className="w-3.5 h-3.5 text-brand-teal flex-shrink-0" />
-                      <span>Phone numbers and names are masked in memory prior to analysis.</span>
+                      <span>Phone numbers, emails and long digit sequences are masked in memory before AI analysis.</span>
                     </span>
 
                     <Button

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Shield, Lock, Mail, User, ArrowRight, AlertCircle, CheckCircle2, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Shield, Lock, Mail, User, ArrowRight, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
@@ -33,7 +33,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-10rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 select-none">
+    <div className="min-h-[calc(100vh-10rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <Card padding="none" className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 shadow-elevated">
         
         {/* Left: Registration Form */}
@@ -60,17 +60,19 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
             {/* Full Name / Alias */}
             <div className="space-y-1.5">
-              <label className="font-semibold text-content-primary dark:text-dark-primary">
-                Full Name or Alias
+              <label htmlFor="register-name" className="font-semibold text-content-primary dark:text-dark-primary">
+                Name
               </label>
               <div className="relative flex items-center">
                 <input
+                  id="register-name"
                   type="text"
                   required
+                  autoComplete="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Security Specialist"
-                  className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border text-content-primary dark:text-dark-primary placeholder:text-content-muted focus:outline-none focus:border-brand-teal transition-colors"
+                  placeholder="Your name"
+                  className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border text-content-primary dark:text-dark-primary placeholder:text-content-muted text-base sm:text-sm focus:outline-none focus:border-brand-teal transition-colors"
                 />
                 <User className="w-4 h-4 text-content-muted absolute left-3 pointer-events-none" />
               </div>
@@ -78,17 +80,19 @@ export default function RegisterPage() {
 
             {/* Email Address */}
             <div className="space-y-1.5">
-              <label className="font-semibold text-content-primary dark:text-dark-primary">
-                Work Email Address
+              <label htmlFor="register-email" className="font-semibold text-content-primary dark:text-dark-primary">
+                Email address
               </label>
               <div className="relative flex items-center">
                 <input
+                  id="register-email"
                   type="email"
                   required
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="analyst@enterprise.com"
-                  className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border text-content-primary dark:text-dark-primary placeholder:text-content-muted focus:outline-none focus:border-brand-teal transition-colors"
+                  placeholder="you@example.com"
+                  className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border text-content-primary dark:text-dark-primary placeholder:text-content-muted text-base sm:text-sm focus:outline-none focus:border-brand-teal transition-colors"
                 />
                 <Mail className="w-4 h-4 text-content-muted absolute left-3 pointer-events-none" />
               </div>
@@ -96,18 +100,20 @@ export default function RegisterPage() {
 
             {/* Password Field with Visibility Toggle */}
             <div className="space-y-1.5">
-              <label className="font-semibold text-content-primary dark:text-dark-primary">
+              <label htmlFor="register-password" className="font-semibold text-content-primary dark:text-dark-primary">
                 Password (minimum 6 characters)
               </label>
               <div className="relative flex items-center">
                 <input
+                  id="register-password"
                   type={showPassword ? 'text' : 'password'}
                   required
                   minLength={6}
+                  autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border text-content-primary dark:text-dark-primary placeholder:text-content-muted focus:outline-none focus:border-brand-teal transition-colors"
+                  className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border text-content-primary dark:text-dark-primary placeholder:text-content-muted text-base sm:text-sm focus:outline-none focus:border-brand-teal transition-colors"
                 />
                 <Lock className="w-4 h-4 text-content-muted absolute left-3 pointer-events-none" />
                 <button
@@ -174,7 +180,7 @@ export default function RegisterPage() {
           </div>
 
           <p className="text-[11px] font-mono text-content-muted dark:text-dark-muted">
-            End-to-End Privacy Guaranteed • 2026
+            Privacy-first by design
           </p>
         </div>
 

@@ -53,6 +53,30 @@
   }
 }
 
+/* Visible keyboard focus ring everywhere. Many controls use `focus:outline-none`, which would
+   otherwise leave keyboard users with no focus indicator at all. */
+a:focus-visible,
+button:focus-visible,
+[role='tab']:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: 0 0 0 2px var(--bg-canvas), 0 0 0 4px var(--accent-teal);
+}
+
+/* Respect users who ask for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Subtle, mature camera scan indicator */
 @keyframes laserSweep {
   0% {
@@ -126,4 +150,78 @@
 }
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #3B4E60;
+}
+
+/* Html5Qrcode webcam container styling */
+#qr-reader-container {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+
+#qr-reader-container video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 1rem;
+}
+
+#qr-reader-container__scan_region {
+  min-height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#qr-reader-container img {
+  display: none !important;
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Explicit Brand Palette Utilities ensuring immediate styles across HMR */
+  .bg-brand-teal {
+    background-color: #167D73 !important;
+  }
+  .hover\:bg-brand-teal-hover:hover {
+    background-color: #12645C !important;
+  }
+  .active\:bg-brand-teal-active:active {
+    background-color: #0E534D !important;
+  }
+  .text-brand-teal {
+    color: #167D73 !important;
+  }
+  .border-brand-teal {
+    border-color: #167D73 !important;
+  }
+  .bg-brand-teal-subtle {
+    background-color: #E7F3F1 !important;
+  }
+  .text-brand-teal-text {
+    color: #0E534D !important;
+  }
+  .bg-brand-blue {
+    background-color: #527DA8 !important;
+  }
+  .text-brand-blue {
+    color: #527DA8 !important;
+  }
+  .border-brand-blue {
+    border-color: #527DA8 !important;
+  }
+  .bg-brand-blue-subtle {
+    background-color: #EDF3F8 !important;
+  }
 }

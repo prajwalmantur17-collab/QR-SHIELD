@@ -4,9 +4,14 @@ const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
+    if (!localStorage.getItem('qrshield_saas_light_v1')) {
+      localStorage.setItem('qrshield_theme', 'light');
+      localStorage.setItem('qrshield_saas_light_v1', '1');
+      return 'light';
+    }
     const saved = localStorage.getItem('qrshield_theme');
-    if (saved) return saved;
-    return 'light'; // Default to light mode (Premium SaaS)
+    if (saved === 'dark') return 'dark';
+    return 'light'; // Default to light mode (Premium SaaS #F7F8F6 / #FFFFFF / #167D73)
   });
 
   useEffect(() => {

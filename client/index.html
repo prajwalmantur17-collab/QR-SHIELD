@@ -1,12 +1,28 @@
 <!DOCTYPE html>
-<html lang="en" class="light">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
+    <script>
+      (function() {
+        try {
+          if (!localStorage.getItem('qrshield_saas_light_v1')) {
+            localStorage.setItem('qrshield_theme', 'light');
+            localStorage.setItem('qrshield_saas_light_v1', '1');
+          }
+          var theme = localStorage.getItem('qrshield_theme');
+          if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('light');
+          } else {
+            // Default to premium light SaaS theme (#F7F8F6 / #FFFFFF / #167D73)
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light');
+          }
+        } catch (_) {}
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23167D73' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10'/><path d='M9 12h.01'/><path d='M15 12h.01'/><path d='M12 9h.01'/><path d='M12 15h.01'/></svg>" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#F7F8F6" />
     <meta name="description" content="QR Shield — AI-Powered Security, Privacy & Trust platform to verify QR codes, links, and messages before you trust." />
     
@@ -51,13 +67,20 @@
     <script type="module" src="/src/main.jsx"></script>
     <script>
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then((reg) => {
-              if (reg) reg.update();
-            })
-            .catch(err => console.log('SW registration error:', err));
-        });
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          // In local development, avoid stale SW caching or Vite HMR collisions
+          navigator.serviceWorker.getRegistrations().then(function(regs) {
+            for (var i = 0; i < regs.length; i++) regs[i].unregister();
+          });
+        } else {
+          window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js')
+              .then(function(reg) {
+                if (reg) reg.update();
+              })
+              .catch(function(err) { console.log('SW registration error:', err); });
+          });
+        }
       }
     </script>
   </body>

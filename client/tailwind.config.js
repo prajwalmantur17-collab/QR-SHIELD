@@ -22,8 +22,8 @@ export default {
         content: {
           primary: '#202B35',
           secondary: '#5F6D7E',
-          muted: '#89959D',
-          subtle: '#A0ACB6',
+          muted: '#6B7885',
+          subtle: '#7E8B97',
           white: '#FFFFFF',
         },
         brand: {
@@ -72,7 +72,7 @@ export default {
           border: '#2C3A47',
           primary: '#F0F4F8',
           secondaryText: '#9AA7B4',
-          muted: '#6C7B8B',
+          muted: '#8795A5',
         }
       },
       fontFamily: {
@@ -87,6 +87,8 @@ export default {
         'elevated': '0 4px 6px -1px rgba(16, 24, 40, 0.06), 0 2px 4px -2px rgba(16, 24, 40, 0.04)',
         'dropdown': '0 10px 15px -3px rgba(16, 24, 40, 0.08), 0 4px 6px -4px rgba(16, 24, 40, 0.04)',
         'modal': '0 20px 25px -5px rgba(16, 24, 40, 0.1), 0 8px 10px -6px rgba(16, 24, 40, 0.04)',
+        // alias: `shadow-elevation` is used by the preview dialogs but was never defined
+        'elevation': '0 20px 25px -5px rgba(16, 24, 40, 0.1), 0 8px 10px -6px rgba(16, 24, 40, 0.04)',
       },
       borderRadius: {
         'sm': '0.375rem',
@@ -97,6 +99,10 @@ export default {
         '3xl': '1.25rem',
       },
       spacing: {
+        // Used across the UI (w-4.5, h-4.5, py-4.5, py-0.2) but missing from Tailwind's default scale,
+        // which silently produced no CSS. Defined here so those classes actually apply.
+        '4.5': '1.125rem',
+        '0.2': '0.125rem',
         'sidebar-expanded': '248px',
         'sidebar-collapsed': '68px',
       }

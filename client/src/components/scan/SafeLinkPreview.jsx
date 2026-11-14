@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Eye, 
@@ -27,12 +27,38 @@ export default function SafeLinkPreview({ targetUrl, domain, verdict = 'safe', r
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [error, setError] = useState(null);
+  const [errorCode, setErrorCode] = useState(null);
   const [previewData, setPreviewData] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
 
+  // Close modals on Escape key
+  useEffect(() => {
+    if (!isOpen && !showWarningModal) return undefined;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (showWarningModal) setShowWarningModal(false);
+        if (isOpen) setIsOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, showWarningModal]);
+
+  // Lock body scroll while modal is open
+  useEffect(() => {
+    if (isOpen || showWarningModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen, showWarningModal]);
+
   const isDangerous = verdict === 'dangerous' || riskScore >= 70;
-  const isSuspicious = verdict === 'suspicious' || (riskScore >= 35 && riskScore < 70);
+  const isSuspicious = verdict === 'suspicious' || (riskScore >= 30 && riskScore < 70);
 
   // Stepper messages during generation
   const steps = [
@@ -65,6 +91,7 @@ export default function SafeLinkPreview({ targetUrl, domain, verdict = 'safe', r
     if (!targetUrl) return;
     setLoading(true);
     setError(null);
+    setErrorCode(null);
     setIsOpen(true);
     setLoadingStep(0);
 
@@ -77,7 +104,9 @@ export default function SafeLinkPreview({ targetUrl, domain, verdict = 'safe', r
       const res = await api.post('/preview', { url: targetUrl });
       setPreviewData(res.data);
     } catch (err) {
-      const msg = err.response?.data?.error || err.message || 'Failed to generate isolated preview.';
+      const code = err.response?.data?.code || null;
+      setErrorCode(code);
+      const msg = err.response?.data?.error || err.message || 'Failed to generate preview.';
       setError(msg);
     } finally {
       clearInterval(interval);
@@ -132,6 +161,9 @@ export default function SafeLinkPreview({ targetUrl, domain, verdict = 'safe', r
         {showWarningModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label="High-Risk Website Warning"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -157,7 +189,7 @@ export default function SafeLinkPreview({ targetUrl, domain, verdict = 'safe', r
                   <span>Isolated Sandbox Protection Active</span>
                 </p>
                 <p className="text-[11px] leading-relaxed text-content-secondary dark:text-dark-secondaryText">
-                  QR Shield will render this site server-side inside an isolated cloud container. Your personal browser, IP, and session tokens will <strong>NEVER</strong> connect directly to this destination.
+                  The destination URL (credentials removed) is sent to third-party screenshot services (thum.io, WordPress mshots). Your device never connects to the site.
                 </p>
               </div>
 
@@ -188,6 +220,9 @@ export default function SafeLinkPreview({ targetUrl, domain, verdict = 'safe', r
         {isOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm overflow-y-auto">
             <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Safe Link Preview Window"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -286,7 +321,7 @@ export default function SafeLinkPreview({ targetUrl, domain, verdict = 'safe', r
                     </div>
                     <div className="space-y-1">
                       <h4 className="text-xs font-bold text-content-primary dark:text-dark-primary">
-                        Preview Blocked by Security Policy
+                        {errorCode === 'SSRF_BLOCKED' ? 'Preview blocked by security policy' : 'Preview unavailable'}
                       </h4>
                       <p className="text-xs text-status-danger-text max-w-md mx-auto leading-relaxed">
                         {error}
@@ -333,7 +368,7 @@ export default function SafeLinkPreview({ targetUrl, domain, verdict = 'safe', r
                       <div className="flex items-center space-x-1.5 text-[11px] font-mono text-content-muted dark:text-dark-muted">
                         <span>SSRF Verified</span>
                         <span>•</span>
-                        <span>Isolated Air-Gap</span>
+                        <span>Safe Preview</span>
                       </div>
                     </div>
 
@@ -417,7 +452,7 @@ export default function SafeLinkPreview({ targetUrl, domain, verdict = 'safe', r
                           Security Notice: Isolated Inspection
                         </p>
                         <p>
-                          This visual preview was generated in an isolated sandbox. It lets you inspect the website layout safely without exposing your device. An innocent-looking preview does not guarantee that the website is safe from phishing or financial fraud.
+                          The destination URL (credentials removed) is sent to third-party screenshot services (thum.io, WordPress mshots). Your device never connects to the site. An innocent-looking preview does not guarantee that the website is safe from phishing or financial fraud.
                         </p>
                       </div>
                     </div>
@@ -428,7 +463,7 @@ export default function SafeLinkPreview({ targetUrl, domain, verdict = 'safe', r
               {/* Modal Footer */}
               <div className="px-6 py-3 bg-canvas-subtle dark:bg-dark-secondary border-t border-border dark:border-dark-border flex items-center justify-between text-xs flex-shrink-0">
                 <span className="text-[11px] text-content-muted dark:text-dark-muted font-mono">
-                  QR Shield Air-Gap Sandbox v1.0
+                  Safe Preview
                 </span>
                 <button
                   type="button"

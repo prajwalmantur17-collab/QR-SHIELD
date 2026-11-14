@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Sidebar from './Sidebar';
 import AppHeader from './AppHeader';
 
@@ -18,6 +18,14 @@ export default function AppLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-canvas dark:bg-dark-bg text-content-primary dark:text-dark-primary flex">
+      {/* Accessible skip link */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-3 focus:py-1.5 focus:rounded-lg focus:bg-brand-teal focus:text-white focus:text-xs focus:font-semibold focus:shadow-lg focus:outline-none"
+      >
+        Skip to main content
+      </a>
+
       {/* 1. Sidebar Component (Desktop persistent + Mobile drawer) */}
       <Sidebar
         isCollapsed={isCollapsed}
@@ -38,8 +46,21 @@ export default function AppLayout({ children }) {
           isCollapsed={isCollapsed}
         />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
-          {children}
+        <main id="main-content" tabIndex="-1" className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto focus:outline-none">
+          <Suspense
+            fallback={
+              <div
+                role="status"
+                aria-live="polite"
+                className="min-h-[40vh] flex items-center justify-center"
+              >
+                <span className="w-6 h-6 rounded-full border-2 border-brand-teal border-t-transparent animate-spin" />
+                <span className="sr-only">Loading page...</span>
+              </div>
+            }
+          >
+            {children}
+          </Suspense>
         </main>
       </div>
     </div>

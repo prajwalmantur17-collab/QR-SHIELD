@@ -39,6 +39,13 @@ export const DEMO_SAMPLES = {
 };
 
 async function seed() {
+  // The demo account uses a publicly documented password, so never create it on a production deployment.
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PRODUCTION_SEED !== 'true') {
+    console.error('Refusing to seed demo data in production (set ALLOW_PRODUCTION_SEED=true to override).');
+    process.exitCode = 1;
+    return;
+  }
+
   console.log('🌱 Seeding QR Shield database with demo accounts and statistics...');
 
   try {
@@ -145,7 +152,8 @@ async function seed() {
     console.log('🎉 Seeding completed successfully!');
   } catch (error) {
     console.error('❌ Seeding error:', error);
+    process.exitCode = 1; // report failure to CI / the shell instead of always exiting 0
   }
 }
 
-seed().then(() => process.exit(0));
+seed().then(() => process.exit(process.exitCode || 0));

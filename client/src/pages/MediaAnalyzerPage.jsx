@@ -4,28 +4,27 @@ import {
   Video, 
   History, 
   ShieldCheck, 
-  Lock, 
-  Sparkles, 
-  Info, 
   Trash2, 
   FileAudio, 
   FileVideo, 
-  ArrowRight,
-  Sliders,
-  CheckCircle2,
-  Clock,
-  Layers
+  Sliders
 } from 'lucide-react';
 import VoiceAnalyzer from '../components/media/VoiceAnalyzer';
 import VideoAnalyzer from '../components/media/VideoAnalyzer';
-import Card, { CardHeader } from '../components/common/Card';
+import Card from '../components/common/Card';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
+import Tabs from '../components/common/Tabs';
+import Modal from '../components/common/Modal';
+import PageHeader from '../components/layout/PageHeader';
+import usePageTitle from '../hooks/usePageTitle';
 import { getMediaAuditHistory, formatBytes, formatDuration } from '../services/media/mediaUtils';
 
 export default function MediaAnalyzerPage() {
+  usePageTitle('Media Authenticity');
   const [activeTab, setActiveTab] = useState('audio'); // 'audio' | 'video' | 'history'
   const [historyRecords, setHistoryRecords] = useState([]);
+  const [showClearModal, setShowClearModal] = useState(false);
 
   useEffect(() => {
     loadHistory();
@@ -40,113 +39,58 @@ export default function MediaAnalyzerPage() {
     loadHistory();
   };
 
-  const handleClearHistory = () => {
-    if (window.confirm('Are you sure you want to clear your local media audit history? This action cannot be undone.')) {
-      localStorage.removeItem('qrshield_media_audit_history');
-      setHistoryRecords([]);
-    }
+  const confirmClearHistory = () => {
+    localStorage.removeItem('qrshield_media_audit_history');
+    setHistoryRecords([]);
+    setShowClearModal(false);
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-5xl mx-auto space-y-6">
       
       {/* 1. Header & Local Air-Gap Guarantee */}
-      <div className="space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <Badge variant="teal" size="sm" dot>
-                LOCAL HEURISTIC ENGINE
-              </Badge>
-              <span className="text-xs text-content-muted dark:text-dark-secondaryText font-mono">
-                Pure Signal Processing v2.4
-              </span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-content-primary dark:text-dark-primary">
-              Media Authenticity & Risk Analyzer
-            </h1>
-            <p className="text-sm text-content-secondary dark:text-dark-secondaryText max-w-2xl">
-              Inspect voice recordings and video clips for technical anomalies, digital splicing, unnatural silence, and frame jitter without external AI APIs or cloud data uploads.
-            </p>
-          </div>
+      <PageHeader
+        title="Media Authenticity"
+        description="Inspect voice recordings and video clips for technical anomalies, digital splicing, unnatural silence, and frame jitter without external AI APIs or cloud data uploads."
+        right={
+          <Badge variant="teal" size="sm" dot>
+            LOCAL HEURISTIC ENGINE
+          </Badge>
+        }
+      />
 
-          <div className="flex items-center space-x-2">
-            <div className="flex items-center space-x-2 px-3 py-2 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border text-xs text-content-secondary dark:text-dark-secondaryText">
-              <Lock className="w-3.5 h-3.5 text-brand-teal" />
-              <span>100% In-Browser Isolation</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Privacy Callout Banner */}
-        <div className="p-4 rounded-2xl bg-brand-teal/5 dark:bg-brand-teal/10 border border-brand-teal/20 flex items-start space-x-3.5">
-          <ShieldCheck className="w-5 h-5 text-brand-teal flex-shrink-0 mt-0.5" />
-          <div className="space-y-1 text-xs">
-            <span className="font-semibold text-content-primary dark:text-dark-primary block">
-              Air-Gap Browser Guarantee
-            </span>
-            <p className="text-content-secondary dark:text-dark-secondaryText leading-relaxed">
-              Your audio and video files are processed entirely in local memory using the browser's native Web Audio API and HTML5 Canvas. Zero media bytes, voiceprints, or video frames are transmitted to remote detection APIs or servers.
-            </p>
-          </div>
+      {/* Privacy Callout Banner */}
+      <div className="p-4 rounded-2xl bg-brand-teal/5 dark:bg-brand-teal/10 border border-brand-teal/20 flex items-start space-x-3.5">
+        <ShieldCheck className="w-5 h-5 text-brand-teal flex-shrink-0 mt-0.5" />
+        <div className="space-y-1 text-xs">
+          <span className="font-semibold text-content-primary dark:text-dark-primary block">
+            Air-Gap Browser Guarantee
+          </span>
+          <p className="text-content-secondary dark:text-dark-secondaryText leading-relaxed">
+            Your audio and video files are processed entirely in local memory using the browser's native Web Audio API and HTML5 Canvas. Zero media bytes, voiceprints, or video frames are transmitted to remote detection APIs or servers.
+          </p>
         </div>
       </div>
 
       {/* 2. Primary Navigation Tabs */}
-      <div className="flex items-center justify-between border-b border-border dark:border-dark-border">
-        <div className="flex space-x-1 sm:space-x-3">
-          <button
-            type="button"
-            onClick={() => setActiveTab('audio')}
-            className={`flex items-center space-x-2 pb-3.5 px-3 text-xs sm:text-sm font-semibold border-b-2 transition-all ${
-              activeTab === 'audio'
-                ? 'border-brand-teal text-brand-teal'
-                : 'border-transparent text-content-secondary dark:text-dark-secondaryText hover:text-content-primary hover:border-border'
-            }`}
-          >
-            <Mic className="w-4 h-4" />
-            <span>Voice Authenticity</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('video')}
-            className={`flex items-center space-x-2 pb-3.5 px-3 text-xs sm:text-sm font-semibold border-b-2 transition-all ${
-              activeTab === 'video'
-                ? 'border-brand-teal text-brand-teal'
-                : 'border-transparent text-content-secondary dark:text-dark-secondaryText hover:text-content-primary hover:border-border'
-            }`}
-          >
-            <Video className="w-4 h-4" />
-            <span>Video Authenticity</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('history')}
-            className={`flex items-center space-x-2 pb-3.5 px-3 text-xs sm:text-sm font-semibold border-b-2 transition-all ${
-              activeTab === 'history'
-                ? 'border-brand-teal text-brand-teal'
-                : 'border-transparent text-content-secondary dark:text-dark-secondaryText hover:text-content-primary hover:border-border'
-            }`}
-          >
-            <History className="w-4 h-4" />
-            <span>Audit History</span>
-            {historyRecords.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-canvas-subtle dark:bg-dark-secondary text-content-secondary border border-border dark:border-dark-border">
-                {historyRecords.length}
-              </span>
-            )}
-          </button>
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Tabs
+          tabs={[
+            { id: 'audio', label: 'Voice Authenticity', icon: Mic },
+            { id: 'video', label: 'Video Authenticity', icon: Video },
+            { id: 'history', label: 'History (this device)', icon: History, badge: historyRecords.length > 0 ? historyRecords.length : null }
+          ]}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+        />
 
         {activeTab === 'history' && historyRecords.length > 0 && (
           <Button
             variant="ghost"
             size="xs"
             icon={Trash2}
-            onClick={handleClearHistory}
-            className="text-status-danger hover:text-red-700 pb-2"
+            onClick={() => setShowClearModal(true)}
+            className="text-status-danger hover:text-red-700"
           >
             Clear History
           </Button>
@@ -288,6 +232,35 @@ export default function MediaAnalyzerPage() {
           </div>
         </div>
       </Card>
+
+      {/* Clear History Confirmation Modal */}
+      <Modal
+        isOpen={showClearModal}
+        onClose={() => setShowClearModal(false)}
+        title="Clear Local Audit History"
+      >
+        <div className="space-y-4">
+          <p className="text-xs text-content-secondary dark:text-dark-secondaryText leading-relaxed">
+            Are you sure you want to clear your local media audit history? This action will permanently remove all audio and video audit records stored in this browser.
+          </p>
+          <div className="flex items-center justify-end space-x-2 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowClearModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={confirmClearHistory}
+            >
+              Clear History
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
     </div>
   );

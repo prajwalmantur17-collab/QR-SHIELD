@@ -28,8 +28,8 @@ export const previewSchema = z.object({
 });
 
 export const reportSchema = z.object({
-  target: z.string().min(1, 'Target URL or domain is required'),
-  reason: z.string().optional()
+  target: z.string().min(1, 'Target URL or domain is required').max(2048, 'Target too long'),
+  reason: z.string().max(500, 'Reason too long').optional()
 });
 
 export const aiVerdictSchema = z.object({

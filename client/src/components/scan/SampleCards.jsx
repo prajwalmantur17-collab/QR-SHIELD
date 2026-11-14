@@ -1,6 +1,7 @@
 import React from 'react';
 import { Sparkles, ShieldCheck, DollarSign, MessageSquare, Globe, ArrowRight } from 'lucide-react';
 import Badge from '../common/Badge';
+import { useAuth } from '../../context/AuthContext';
 
 export const SAMPLES = [
   {
@@ -46,11 +47,20 @@ export const SAMPLES = [
 ];
 
 export default function SampleCards({ onSelectSample }) {
+  const { isAuthenticated } = useAuth();
+
   return (
     <div className="space-y-3 pt-2">
-      <div className="flex items-center space-x-2 text-[11px] font-semibold text-content-muted dark:text-dark-muted uppercase font-mono tracking-wider">
-        <Sparkles className="w-3.5 h-3.5 text-brand-teal" />
-        <span>One-Click Threat Simulation Benchmarks</span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px]">
+        <div className="flex items-center space-x-2 font-semibold text-content-muted dark:text-dark-muted uppercase font-mono tracking-wider">
+          <Sparkles className="w-3.5 h-3.5 text-brand-teal" />
+          <span>One-Click Threat Simulation Benchmarks</span>
+        </div>
+        {!isAuthenticated && (
+          <span className="text-[11px] text-content-muted dark:text-dark-muted font-normal italic">
+            Runs a real scan (counts toward your daily limit)
+          </span>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">

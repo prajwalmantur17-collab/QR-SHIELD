@@ -11,6 +11,18 @@ export const authLimiter = rateLimit({
   legacyHeaders: false
 });
 
+// Community report limiter: stops anonymous spam from poisoning the shared scam blacklist
+export const reportLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: (req) => (req.user ? 30 : 5),
+  keyGenerator: (req) => (req.user && req.user.id ? `user_${req.user.id}` : req.ip || 'guest_client'),
+  message: {
+    error: 'Too many reports submitted. Please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
 // Scan limiter: 5 scans / day for guests, 60 / hour for logged-in users
 export const scanLimiter = rateLimit({
   windowMs: 24 * 60 * 60 * 1000, // 24 hours

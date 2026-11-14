@@ -13,10 +13,12 @@ import {
   Info,
   DollarSign,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Volume2
 } from 'lucide-react';
 import RiskGauge from './RiskGauge';
 import SafeLinkPreview from './SafeLinkPreview';
+import { voiceAssistant } from '../../services/voice/voiceAssistant';
 import api from '../../api/client';
 import Button from '../common/Button';
 import Badge from '../common/Badge';
@@ -34,7 +36,7 @@ export default function VerdictCard({ result, onScanAnother }) {
     risk_score = 0,
     scam_category = 'Legitimate',
     ai_used = false,
-    confidence = 0.9,
+    confidence,
     recommended_action = '',
     signals = [],
     hops = [],
@@ -135,7 +137,7 @@ Verified with Zero-Knowledge Hashes. Scan before you trust.`;
 
             {cached && (
               <Badge variant="neutral" size="xs">
-                Cached 24h
+                Cached result (last 24 h)
               </Badge>
             )}
           </div>
@@ -146,8 +148,12 @@ Verified with Zero-Knowledge Hashes. Scan before you trust.`;
 
           <div className="text-[11px] text-content-muted dark:text-dark-muted font-mono flex flex-wrap items-center justify-center md:justify-start gap-x-2 gap-y-1">
             <span>SHA-256: {contentHash ? contentHash.slice(0, 16) + '...' : 'Verified'}</span>
-            <span>•</span>
-            <span>Confidence: {Math.round(confidence * 100)}%</span>
+            {ai_used && typeof confidence === 'number' && (
+              <>
+                <span>•</span>
+                <span>AI confidence: {Math.round(confidence * 100)}%</span>
+              </>
+            )}
             {ai_used && (
               <>
                 <span>•</span>
@@ -301,7 +307,18 @@ Verified with Zero-Knowledge Hashes. Scan before you trust.`;
 
       {/* 7. Action Buttons Bar */}
       <div className="pt-4 border-t border-border dark:border-dark-border flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Replay Voice Announcement */}
+          <Button
+            size="sm"
+            variant="outline"
+            icon={Volume2}
+            onClick={() => voiceAssistant.replay()}
+            title="Replay spoken security announcement"
+          >
+            Listen Announcement
+          </Button>
+
           {/* Report Scam Button */}
           <Button
             size="sm"
@@ -311,7 +328,7 @@ Verified with Zero-Knowledge Hashes. Scan before you trust.`;
             disabled={reported || reporting}
           >
             {reported
-              ? `Blacklisted (${reportCount || '1'} reports)`
+              ? `Reported (${reportCount ?? '1'})`
               : reporting
               ? 'Reporting...'
               : 'Report Scam'}

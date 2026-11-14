@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -11,7 +12,9 @@ export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseKey && !supab
 export const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseKey) : null;
 
 // File-backed persistent fallback store when Supabase is not configured
-const DATA_DIR = path.resolve('data');
+// Anchored to the server folder (server/data) so `npm start` from the repo root, `npm run dev`
+// and `npm run seed` all read/write the SAME store instead of depending on the current directory.
+const DATA_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'data');
 const DATA_FILE = path.join(DATA_DIR, 'store.json');
 
 function loadLocalStore() {

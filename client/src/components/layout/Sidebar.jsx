@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -7,21 +7,13 @@ import {
   LayoutDashboard, 
   BookOpen, 
   Lock, 
-  History, 
-  Compass, 
-  ExternalLink,
   ChevronLeft, 
   ChevronRight, 
   User, 
   LogOut, 
   Sun, 
   Moon, 
-  Activity, 
-  CheckCircle2, 
-  Sparkles,
-  Search,
-  Eye,
-  Sliders,
+  ScanSearch,
   PanelLeftClose,
   PanelLeftOpen
 } from 'lucide-react';
@@ -42,25 +34,15 @@ export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, o
           id: 'scan',
           name: 'Threat Scanner',
           path: '/scan',
-          icon: QrCode,
-          badge: 'Live',
-          badgeVariant: 'teal'
+          icon: QrCode
         },
         {
           id: 'media',
           name: 'Media Authenticity',
           path: '/media',
-          icon: Sliders,
+          icon: ScanSearch,
           badge: 'Local',
           badgeVariant: 'teal'
-        },
-        {
-          id: 'share',
-          name: 'Quick Share Target',
-          path: '/share',
-          icon: Eye,
-          badge: 'PWA',
-          badgeVariant: 'neutral'
         }
       ]
     },
@@ -82,8 +64,7 @@ export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, o
           id: 'awareness',
           name: 'Scam Awareness',
           path: '/awareness',
-          icon: BookOpen,
-          badge: '4 Guides'
+          icon: BookOpen
         }
       ]
     },
@@ -94,9 +75,7 @@ export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, o
           id: 'privacy',
           name: 'Privacy Center',
           path: '/privacy',
-          icon: Lock,
-          badge: 'Zero-Knowledge',
-          badgeVariant: 'teal'
+          icon: Lock
         }
       ]
     }
@@ -104,7 +83,20 @@ export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, o
 
   const isActive = (path) => location.pathname === path;
 
-  const sidebarContent = (
+  // Close the mobile drawer with the Escape key
+  useEffect(() => {
+    if (!isMobileOpen) return undefined;
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') onCloseMobile();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isMobileOpen, onCloseMobile]);
+
+  // Rendered as a function so the mobile drawer can ALWAYS be shown expanded, even when the
+  // desktop sidebar was collapsed to icons (that preference is persisted in localStorage and
+  // previously leaked into the drawer, leaving mobile users with an icon-only, unlabeled menu).
+  const renderSidebar = (isCollapsed) => (
     <div className="flex flex-col h-full bg-white dark:bg-dark-surface border-r border-border dark:border-dark-border select-none transition-all duration-200">
       
       {/* 1. Brand Logo & Collapse Toggle */}
@@ -131,9 +123,6 @@ export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, o
               <div className="flex items-center space-x-1.5">
                 <span className="font-bold text-sm tracking-tight text-content-primary dark:text-dark-primary">
                   QR <span className="text-brand-teal">SHIELD</span>
-                </span>
-                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-brand-teal-subtle text-brand-teal font-semibold">
-                  v2.4
                 </span>
               </div>
               <span className="text-[10px] font-mono uppercase tracking-wider text-content-muted dark:text-dark-muted -mt-0.5">
@@ -184,6 +173,8 @@ export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, o
                     to={item.path}
                     onClick={onCloseMobile}
                     title={isCollapsed ? item.name : undefined}
+                    aria-label={isCollapsed ? item.name : undefined}
+                    aria-current={active ? 'page' : undefined}
                     className={`relative flex items-center rounded-lg font-medium text-xs transition-all duration-150 group ${
                       isCollapsed 
                         ? 'justify-center p-2.5' 
@@ -226,23 +217,7 @@ export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, o
         ))}
       </div>
 
-      {/* 3. System Status Pill (SSRF / Isolation Engine) */}
-      {!isCollapsed && (
-        <div className="p-3 mx-3 mb-2 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border">
-          <div className="flex items-center justify-between text-[11px] mb-1">
-            <span className="text-content-secondary dark:text-dark-secondaryText font-medium">Protection Engine</span>
-            <span className="flex items-center space-x-1 text-status-success font-semibold font-mono">
-              <span className="w-1.5 h-1.5 rounded-full bg-status-success animate-pulse" />
-              <span>Active</span>
-            </span>
-          </div>
-          <div className="text-[10px] text-content-muted dark:text-dark-muted font-mono truncate">
-            SSRF Guard • Zero-Knowledge
-          </div>
-        </div>
-      )}
-
-      {/* 4. Bottom User Profile & Theme Section */}
+      {/* 3. Bottom User Profile & Theme Section */}
       <div className="p-3 border-t border-border dark:border-dark-border space-y-2">
         {/* Theme switcher */}
         <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between px-2'}`}>
@@ -326,7 +301,7 @@ export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, o
           isCollapsed ? 'w-[68px]' : 'w-[248px]'
         }`}
       >
-        {sidebarContent}
+        {renderSidebar(isCollapsed)}
       </aside>
 
       {/* Mobile Slide-over Drawer */}
@@ -348,9 +323,12 @@ export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, o
               animate={{ x: 0 }}
               exit={{ x: -280 }}
               transition={{ type: 'spring', damping: 30, stiffness: 350 }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Navigation menu"
               className="relative w-64 max-w-[80vw] h-full z-10"
             >
-              {sidebarContent}
+              {renderSidebar(false)}
             </motion.div>
           </div>
         )}

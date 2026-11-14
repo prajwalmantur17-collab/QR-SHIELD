@@ -10,23 +10,24 @@ import {
   KeyRound,
   Database,
   FileCode,
-  ShieldAlert,
   Fingerprint,
-  Sparkles,
-  ArrowRight,
   Copy,
   Check
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import Card, { CardHeader } from '../components/common/Card';
+import Card from '../components/common/Card';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
 import Modal from '../components/common/Modal';
+import PageHeader from '../components/layout/PageHeader';
+import usePageTitle from '../hooks/usePageTitle';
 
 export default function PrivacyCenterPage() {
+  usePageTitle('Privacy Center');
   const { user, isAuthenticated, deleteMyData } = useAuth();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
 
   // Interactive Live Hash Demonstrator State
@@ -63,35 +64,31 @@ export default function PrivacyCenterPage() {
 
   const handleDelete = async () => {
     setDeleting(true);
+    setDeleteError(null);
     try {
       await deleteMyData();
       setShowConfirmModal(false);
       setSuccessMsg('Your account and all associated scan history have been permanently purged.');
     } catch (err) {
-      console.error('Delete data error:', err);
+      setDeleteError(err.response?.data?.error || err.message || 'Failed to delete data. Please try again.');
     } finally {
       setDeleting(false);
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 select-none">
+    <div className="max-w-4xl mx-auto space-y-8">
       
       {/* 1. Header with Privacy Badge */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border dark:border-dark-border">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-content-primary dark:text-dark-primary tracking-tight">
-            Privacy Center & Trust Architecture
-          </h1>
-          <p className="text-xs text-content-secondary dark:text-dark-secondaryText mt-0.5">
-            Mathematical zero-knowledge guarantees: security tools should never become the data-collectors of the threats they inspect.
-          </p>
-        </div>
-
-        <Badge variant="teal" size="sm" dot>
-          Zero-Knowledge Active
-        </Badge>
-      </div>
+      <PageHeader
+        title="Privacy Center"
+        description="'Zero-knowledge' here means we store no raw URLs, messages or images - only keyed hashes."
+        right={
+          <Badge variant="teal" size="sm" dot>
+            Zero-Knowledge Active
+          </Badge>
+        }
+      />
 
       {successMsg && (
         <div className="p-3.5 rounded-xl bg-status-success-bg border border-status-success-border text-status-success text-xs text-center font-medium">
@@ -99,13 +96,35 @@ export default function PrivacyCenterPage() {
         </div>
       )}
 
-      {/* 2. Interactive Zero-Knowledge Hash Demonstrator */}
+      {/* 2. Who else sees what you scan */}
+      <Card padding="md" className="space-y-3">
+        <h3 className="text-sm font-bold text-content-primary dark:text-dark-primary flex items-center space-x-2">
+          <EyeOff className="w-4 h-4 text-brand-teal" />
+          <span>Who else sees what you scan</span>
+        </h3>
+        <ul className="space-y-2 text-xs text-content-secondary dark:text-dark-secondaryText leading-relaxed">
+          <li className="flex items-start space-x-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-teal flex-shrink-0 mt-1.5" />
+            <span><strong>Google Gemini:</strong> receives the scanned content (phone numbers and emails masked) for AI analysis.</span>
+          </li>
+          <li className="flex items-start space-x-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-teal flex-shrink-0 mt-1.5" />
+            <span><strong>thum.io & WordPress mshots:</strong> receive the destination URL (credentials removed) only when you tap Preview.</span>
+          </li>
+          <li className="flex items-start space-x-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-teal flex-shrink-0 mt-1.5" />
+            <span><strong>Nothing else:</strong> is sent to third parties. All QR decoding and signal calculations execute locally in your browser.</span>
+          </li>
+        </ul>
+      </Card>
+
+      {/* 3. Interactive Zero-Knowledge Hash Demonstrator */}
       <Card padding="md" className="space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-border dark:border-dark-border">
           <div className="flex items-center space-x-2">
             <Fingerprint className="w-4 h-4 text-brand-teal" />
             <h3 className="text-xs font-bold uppercase tracking-wider text-content-primary dark:text-dark-primary font-mono">
-              Live Cryptographic Zero-Knowledge Demonstrator
+              Illustration: plain SHA-256. Our server adds a secret key (HMAC), so real stored hashes differ.
             </h3>
           </div>
           <Badge variant="teal" size="xs">Interactive Test</Badge>
@@ -125,7 +144,7 @@ export default function PrivacyCenterPage() {
               value={demoInput}
               onChange={(e) => setDemoInput(e.target.value)}
               placeholder="Enter any text to see its one-way hash..."
-              className="w-full px-3.5 py-2.5 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border text-xs font-mono text-content-primary dark:text-dark-primary focus:outline-none focus:border-brand-teal"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border text-base sm:text-sm font-mono text-content-primary dark:text-dark-primary focus:outline-none focus:border-brand-teal"
             />
           </div>
 
@@ -151,7 +170,7 @@ export default function PrivacyCenterPage() {
         </div>
       </Card>
 
-      {/* 3. Two-Column Comparison: What We Store vs What We Never Store */}
+      {/* 4. Two-Column Comparison: What We Store vs What We Never Store */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         
         {/* Column 1: What We Store */}
@@ -226,7 +245,7 @@ export default function PrivacyCenterPage() {
 
       </div>
 
-      {/* 4. Deep Dive: How Salted Hashes Work in Plain Language */}
+      {/* 5. Deep Dive: How Salted Hashes Work in Plain Language */}
       <Card padding="md" className="space-y-3">
         <h3 className="text-sm font-bold text-content-primary dark:text-dark-primary flex items-center space-x-2">
           <FileCode className="w-4 h-4 text-brand-teal" />
@@ -243,13 +262,13 @@ export default function PrivacyCenterPage() {
         </div>
       </Card>
 
-      {/* 5. Danger Zone: Delete My Data (Right to Erasure) */}
+      {/* 6. Danger Zone: Delete My Data (Right to Erasure) */}
       <Card padding="md" className="border-status-danger-border/60 dark:border-status-danger/30 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <h3 className="text-xs font-bold uppercase tracking-wider text-status-danger flex items-center space-x-1.5 font-mono">
               <Trash2 className="w-4 h-4" />
-              <span>Right to Erasure (GDPR / CCPA Compliant)</span>
+              <span>Right to Erasure</span>
             </h3>
             <p className="text-xs text-content-secondary dark:text-dark-secondaryText">
               Permanently delete all historical scan records and your user profile from our database.
@@ -261,7 +280,10 @@ export default function PrivacyCenterPage() {
               size="sm"
               variant="danger"
               icon={Trash2}
-              onClick={() => setShowConfirmModal(true)}
+              onClick={() => {
+                setDeleteError(null);
+                setShowConfirmModal(true);
+              }}
             >
               Delete My Data
             </Button>
@@ -282,13 +304,19 @@ export default function PrivacyCenterPage() {
         maxWidth="max-w-md"
       >
         <div className="space-y-4">
+          {deleteError && (
+            <div className="p-3 rounded-xl bg-status-danger-bg border border-status-danger-border text-status-danger text-xs">
+              {deleteError}
+            </div>
+          )}
+
           <div className="p-3 rounded-xl bg-status-danger-bg border border-status-danger-border text-status-danger text-xs space-y-1">
             <p className="font-semibold flex items-center space-x-1">
               <AlertTriangle className="w-4 h-4 flex-shrink-0" />
               <span>Permanent Deletion Notice</span>
             </p>
             <p className="text-[11px] leading-relaxed">
-              Upon confirmation, our backend executes a cascading delete purging your user ID, audit logs, and salt telemetry from Supabase.
+              Upon confirmation, our backend executes a cascading delete purging your user ID, audit logs, and scan history and account record.
             </p>
           </div>
 

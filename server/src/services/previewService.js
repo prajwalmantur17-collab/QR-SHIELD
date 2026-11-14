@@ -2,63 +2,17 @@ import axios from 'axios';
 import dns from 'dns';
 import crypto from 'crypto';
 import { extractDomain } from '../utils/crypto.js';
+import { isRestrictedIpOrHost, safeLookup } from '../utils/ssrf.js';
 
-// Suspicious / high-risk TLDs
-const SUSPICIOUS_TLDS = new Set([
-  'xyz', 'top', 'click', 'tk', 'ml', 'ga', 'cf', 'gq', 'work', 'loan',
-  'racing', 'bid', 'party', 'review', 'country', 'kim', 'buzz', 'surf',
-  'tokyo', 'vip', 'monster', 'rest', 'fit', 'beauty', 'hair', 'quest'
-]);
+// Re-exported for backwards compatibility with existing imports
+export { isRestrictedIpOrHost };
 
-/**
- * Checks if an IP or host is private, loopback, link-local, or cloud metadata
- */
-export function isRestrictedIpOrHost(target) {
-  if (!target) return true;
-  const lower = target.toLowerCase().trim();
-
-  // Hostname string checks
-  if (
-    lower === 'localhost' ||
-    lower.endsWith('.localhost') ||
-    lower === 'metadata.google.internal' ||
-    lower.includes('metadata.internal') ||
-    lower.includes('169.254.169.254')
-  ) {
-    return true;
-  }
-
-  // IPv4 validation
-  const ipv4Match = lower.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
-  if (ipv4Match) {
-    const [_, a, b, c, d] = ipv4Match.map(Number);
-    if (a < 0 || a > 255 || b < 0 || b > 255 || c < 0 || c > 255 || d < 0 || d > 255) return true;
-    if (a === 0) return true;                           // 0.0.0.0/8
-    if (a === 127) return true;                         // 127.0.0.0/8 (loopback)
-    if (a === 10) return true;                          // 10.0.0.0/8 (private)
-    if (a === 172 && b >= 16 && b <= 31) return true;   // 172.16.0.0/12 (private)
-    if (a === 192 && b === 168) return true;           // 192.168.0.0/16 (private)
-    if (a === 169 && b === 254) return true;           // 169.254.0.0/16 (link-local, cloud metadata)
-    if (a >= 224 && a <= 239) return true;             // 224.0.0.0/4 (multicast)
-    if (a === 255) return true;                         // broadcast
-  }
-
-  // IPv6 validation
-  if (
-    lower === '::1' ||
-    lower === '[::1]' ||
-    lower.startsWith('fe80:') ||
-    lower.startsWith('fc00:') ||
-    lower.startsWith('fd00:')
-  ) {
-    return true;
-  }
-
-  return false;
-}
+const REDIRECT_STATUSES = [301, 302, 303, 307, 308];
 
 /**
- * Validates protocol, hostname, and resolves DNS to prevent DNS rebinding SSRF
+ * Validates protocol, hostname, and resolves DNS to prevent DNS rebinding SSRF.
+ * (Every outbound request below additionally uses `safeLookup`, so the address that is
+ * connected to is the address that was validated.)
  */
 export async function validateTargetWithDns(rawUrl) {
   let parsed;
@@ -105,45 +59,34 @@ export async function expandWithStrictSsrf(initialUrl, maxHops = 5) {
   for (let hop = 0; hop < maxHops; hop++) {
     await validateTargetWithDns(currentUrl);
 
+    let location = null;
     try {
       const response = await axios({
         method: 'HEAD',
         url: currentUrl,
         maxRedirects: 0,
         timeout: 4000,
+        lookup: safeLookup,
         validateStatus: (status) => status >= 200 && status < 400,
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) QRShield-Isolated-Auditor/1.0',
           'Accept': '*/*'
         }
       });
-
-      if ([301, 302, 303, 307, 308].includes(response.status)) {
-        const location = response.headers.location;
-        if (!location) break;
-        const nextUrl = new URL(location, currentUrl).href;
-        if (hops.includes(nextUrl)) break; // Loop
-        await validateTargetWithDns(nextUrl);
-        hops.push(nextUrl);
-        currentUrl = nextUrl;
-      } else {
-        break; // Destination reached
-      }
+      if (REDIRECT_STATUSES.includes(response.status)) location = response.headers.location;
     } catch (err) {
-      if (err.response && [301, 302, 303, 307, 308].includes(err.response.status)) {
-        const location = err.response.headers.location;
-        if (location) {
-          const nextUrl = new URL(location, currentUrl).href;
-          if (!hops.includes(nextUrl)) {
-            await validateTargetWithDns(nextUrl);
-            hops.push(nextUrl);
-            currentUrl = nextUrl;
-            continue;
-          }
-        }
+      if (err.response && REDIRECT_STATUSES.includes(err.response.status)) {
+        location = err.response.headers.location;
       }
-      break;
     }
+
+    if (!location) break; // destination reached, error, or no Location header
+
+    const nextUrl = new URL(location, currentUrl).href;
+    if (hops.includes(nextUrl)) break; // loop
+    await validateTargetWithDns(nextUrl);
+    hops.push(nextUrl);
+    currentUrl = nextUrl;
   }
 
   const finalUrl = hops[hops.length - 1];
@@ -159,7 +102,8 @@ export async function expandWithStrictSsrf(initialUrl, maxHops = 5) {
 }
 
 /**
- * Extracts metadata (title, favicon, description) safely without executing scripts
+ * Extracts metadata (title, favicon, description) safely without executing scripts.
+ * Redirects are NOT followed here: the final URL was already resolved and validated hop by hop.
  */
 export async function fetchSafeMetadata(targetUrl) {
   await validateTargetWithDns(targetUrl);
@@ -174,6 +118,10 @@ export async function fetchSafeMetadata(targetUrl) {
       method: 'GET',
       url: targetUrl,
       timeout: 4000,
+      maxRedirects: 0, // a redirect here would bypass the per-hop SSRF validation
+      lookup: safeLookup,
+      responseType: 'text',
+      transformResponse: [(data) => data],
       maxContentLength: 512 * 1024, // 512 KB limit to prevent response bombs
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) QRShield-PreviewBot/1.0',
@@ -219,7 +167,7 @@ export async function fetchSafeMetadata(targetUrl) {
       } catch {}
     }
   } catch (fetchErr) {
-    // If GET fails or times out, continue with domain-level fallback
+    // If GET fails, is redirected, or times out, continue with domain-level fallback
   }
 
   if (!title) {
@@ -230,20 +178,68 @@ export async function fetchSafeMetadata(targetUrl) {
 }
 
 /**
- * Fetches an isolated visual snapshot from a dedicated rendering endpoint,
+ * Removes credentials (user:pass@) before a URL is shared with a third-party renderer.
+ */
+function stripCredentials(rawUrl) {
+  try {
+    const u = new URL(rawUrl);
+    u.username = '';
+    u.password = '';
+    return u.href;
+  } catch {
+    return rawUrl;
+  }
+}
+
+/**
+ * Fetches a visual snapshot from isolated third-party rendering endpoints
+ * (Microlink -> thum.io -> WordPress mshots),
  * verifies it is a valid image, and returns it as a Base64 data URL.
- * Automatically detects and bypasses asynchronous placeholders (e.g. WordPress mshots).
+ * PRIVACY NOTE: the destination URL (without credentials) is sent to these third-party services.
+ * Strictly detects and rejects asynchronous placeholders (e.g. WordPress mshots "Generating Preview...").
  */
 export async function getIsolatedSnapshotImage(targetUrl, domain) {
-  // 1. Try thum.io isolated screenshot renderer
+  const shareableUrl = stripCredentials(targetUrl);
+
+  // 1. Try Microlink headless Chromium API (fast, reliable, handles SPAs & dashboards)
   try {
-    const thumUrl = `https://image.thum.io/get/width/1024/crop/650/noanimate/${targetUrl}`;
+    const microUrl = `https://api.microlink.io/?url=${encodeURIComponent(shareableUrl)}&screenshot=true&meta=false`;
+    const res = await axios({
+      method: 'GET',
+      url: microUrl,
+      timeout: 5500,
+      headers: { 'User-Agent': 'QRShield-PreviewBot/1.0' }
+    });
+
+    const screenshotUrl = res.data?.data?.screenshot?.url;
+    if (screenshotUrl) {
+      const imgRes = await axios({
+        method: 'GET',
+        url: screenshotUrl,
+        timeout: 4500,
+        responseType: 'arraybuffer',
+        maxContentLength: 3 * 1024 * 1024
+      });
+      const contentType = imgRes.headers['content-type'] || 'image/png';
+      if (imgRes.data && imgRes.data.length > 5000) {
+        const base64 = Buffer.from(imgRes.data).toString('base64');
+        return `data:${contentType};base64,${base64}`;
+      }
+    }
+  } catch {
+    // Microlink unavailable or timed out, fallback to thum.io
+  }
+
+  // 2. Try thum.io screenshot renderer
+  try {
+    const thumUrl = `https://image.thum.io/get/width/1024/crop/650/noanimate/${shareableUrl}`;
     const res = await axios({
       method: 'GET',
       url: thumUrl,
-      timeout: 3500,
+      timeout: 6500,
       responseType: 'arraybuffer',
-      maxContentLength: 3 * 1024 * 1024
+      maxContentLength: 3 * 1024 * 1024,
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) QRShield-PreviewBot/1.0' }
     });
 
     const contentType = res.headers['content-type'] || '';
@@ -255,9 +251,16 @@ export async function getIsolatedSnapshotImage(targetUrl, domain) {
     // thum.io unavailable, fallback to mshots
   }
 
-  // 2. Try WordPress mshots with polling retry to bypass async placeholder
-  const mshotsUrl = `https://s0.wp.com/mshots/v1/${encodeURIComponent(targetUrl)}?w=1024&h=650`;
-  for (let attempt = 0; attempt < 3; attempt++) {
+  // 3. Try WordPress mshots with strict placeholder rejection
+  // Known placeholder hashes & exact sizes from WordPress mshots "Generating Preview..."
+  const KNOWN_PLACEHOLDER_HASHES = new Set([
+    '782825ccff8b414b6b69d649f0d20593', // 70,867 bytes "Generating Preview..."
+    'e89e34619e53928489a0c703c761cd58', // 8,700 bytes
+    'd41d8cd98f00b204e9800998ecf8427e'  // empty
+  ]);
+
+  const mshotsUrl = `https://s0.wp.com/mshots/v1/${encodeURIComponent(shareableUrl)}?w=1024&h=650`;
+  for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const res = await axios({
         method: 'GET',
@@ -270,8 +273,8 @@ export async function getIsolatedSnapshotImage(targetUrl, domain) {
       const contentType = res.headers['content-type'] || '';
       const len = res.data.length;
       const hash = crypto.createHash('md5').update(res.data).digest('hex');
-      // WordPress mshots placeholder image is ~8.7KB with hash e89e34619e53928489a0c703c761cd58
-      const isPlaceholder = len < 10000 || hash === 'e89e34619e53928489a0c703c761cd58';
+
+      const isPlaceholder = len === 70867 || len < 10000 || KNOWN_PLACEHOLDER_HASHES.has(hash);
 
       if (contentType.startsWith('image/') && !isPlaceholder) {
         const base64 = Buffer.from(res.data).toString('base64');
@@ -281,13 +284,13 @@ export async function getIsolatedSnapshotImage(targetUrl, domain) {
       // Retry
     }
 
-    if (attempt < 2) {
-      await new Promise(r => setTimeout(r, 1800));
+    if (attempt < 1) {
+      await new Promise(r => setTimeout(r, 1500));
     }
   }
 
   // If external renderers are unreachable or target blocks bots,
-  // return null so the UI renders the verified metadata card
+  // return null so the UI cleanly renders the verified metadata card
   return null;
 }
 
@@ -312,7 +315,7 @@ export async function generateSafePreview(url) {
   // Step 3: Fetch safe metadata (Title, Favicon, Description)
   const metadata = await fetchSafeMetadata(finalUrl);
 
-  // Step 4: Fetch isolated screenshot snapshot
+  // Step 4: Fetch visual snapshot
   const screenshot = await getIsolatedSnapshotImage(finalUrl, domain);
 
   return {

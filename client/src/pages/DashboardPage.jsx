@@ -1,19 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   ShieldCheck, 
   ShieldAlert, 
-  AlertTriangle, 
   Activity, 
   Lock, 
-  Clock, 
-  Search,
-  Filter,
-  ArrowRight,
-  Radar,
-  TrendingUp,
-  Download,
-  CheckCircle2,
+  Radar, 
   Inbox
 } from 'lucide-react';
 import { 
@@ -30,14 +22,22 @@ import {
 } from 'recharts';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import Card, { CardHeader } from '../components/common/Card';
+import { useTheme } from '../context/ThemeContext';
+import Card from '../components/common/Card';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
 import Tabs from '../components/common/Tabs';
 import EmptyState from '../components/common/EmptyState';
+import { Skeleton, SkeletonCard } from '../components/common/Skeleton';
+import PageHeader from '../components/layout/PageHeader';
+import usePageTitle from '../hooks/usePageTitle';
 
 export default function DashboardPage() {
+  usePageTitle('Security Dashboard');
+  const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [stats, setStats] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -81,104 +81,113 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-8 select-none">
+    <div className="space-y-8">
       
       {/* 1. Header with Breadcrumbs & User State */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border dark:border-dark-border">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-content-primary dark:text-dark-primary tracking-tight">
-            Security Telemetry & Threat Analytics
-          </h1>
-          <p className="text-xs text-content-secondary dark:text-dark-secondaryText mt-0.5">
-            Real-time heuristic distribution, SSRF audit logs, and zero-knowledge scan records.
-          </p>
-        </div>
-
-        {!isAuthenticated ? (
-          <div className="flex items-center space-x-3 bg-brand-teal-subtle dark:bg-dark-secondary border border-brand-teal/20 px-3.5 py-2 rounded-xl text-xs">
-            <span className="text-brand-teal-text dark:text-brand-teal font-medium">
-              Viewing global benchmark stats.
-            </span>
-            <Link to="/login">
-              <Button size="xs" variant="primary">Sign In to Track</Button>
-            </Link>
+      <PageHeader
+        title="Security Dashboard"
+        description="Security telemetry & threat analytics: real-time heuristic distribution, SSRF audit logs, and zero-knowledge scan records."
+        right={
+          <div className="flex flex-wrap items-center gap-3">
+            <Badge variant="neutral" size="sm">
+              {isAuthenticated ? 'Your scans' : 'All users'}
+            </Badge>
+            {!isAuthenticated ? (
+              <div className="flex items-center space-x-2 bg-brand-teal-subtle dark:bg-dark-secondary border border-brand-teal/20 px-3 py-1.5 rounded-xl text-xs">
+                <span className="text-brand-teal-text dark:text-brand-teal font-medium">
+                  Viewing global benchmark stats.
+                </span>
+                <Link to="/login">
+                  <Button size="xs" variant="primary">Sign In to Track</Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2 text-xs text-content-secondary dark:text-dark-secondaryText bg-white dark:bg-dark-surface border border-border dark:border-dark-border px-3 py-1.5 rounded-lg shadow-subtle">
+                <span className="text-content-muted">Operator:</span>
+                <strong className="text-content-primary dark:text-dark-primary font-semibold font-mono">{user?.email}</strong>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="flex items-center space-x-2 text-xs text-content-secondary dark:text-dark-secondaryText bg-white dark:bg-dark-surface border border-border dark:border-dark-border px-3 py-1.5 rounded-lg shadow-subtle">
-            <span className="text-content-muted">Operator:</span>
-            <strong className="text-content-primary dark:text-dark-primary font-semibold font-mono">{user?.email}</strong>
-          </div>
-        )}
-      </div>
+        }
+      />
 
       {/* 2. Top Metric KPI Cards (Linear / Stripe Style) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        {/* Total Scans */}
-        <Card padding="md" className="space-y-1.5">
-          <div className="flex items-center justify-between text-content-secondary dark:text-dark-secondaryText">
-            <span className="text-[11px] font-semibold uppercase tracking-wider font-mono">Total Evaluations</span>
-            <div className="p-1.5 rounded-md bg-canvas-subtle dark:bg-dark-secondary text-brand-teal">
-              <Activity className="w-3.5 h-3.5" />
+      {loading ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          {/* Total Scans */}
+          <Card padding="md" className="space-y-1.5">
+            <div className="flex items-center justify-between text-content-secondary dark:text-dark-secondaryText">
+              <span className="text-[11px] font-semibold uppercase tracking-wider font-mono">Total Scans</span>
+              <div className="p-1.5 rounded-md bg-canvas-subtle dark:bg-dark-secondary text-brand-teal">
+                <Activity className="w-3.5 h-3.5" />
+              </div>
             </div>
-          </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-content-primary dark:text-dark-primary font-mono tracking-tight">
-            {stats?.totalScans ?? 0}
-          </p>
-          <span className="text-[11px] text-content-muted dark:text-dark-muted block">
-            Rules & Gemini AI Synthesis
-          </span>
-        </Card>
+            <p className="text-2xl sm:text-3xl font-extrabold text-content-primary dark:text-dark-primary font-mono tracking-tight">
+              {stats?.totalScans ?? 0}
+            </p>
+            <span className="text-[11px] text-content-muted dark:text-dark-muted block">
+              Rules & Gemini AI Synthesis
+            </span>
+          </Card>
 
-        {/* Threats Neutralized */}
-        <Card padding="md" className="space-y-1.5">
-          <div className="flex items-center justify-between text-content-secondary dark:text-dark-secondaryText">
-            <span className="text-[11px] font-semibold uppercase tracking-wider font-mono">Threats Blocked</span>
-            <div className="p-1.5 rounded-md bg-status-danger-bg text-status-danger">
-              <ShieldAlert className="w-3.5 h-3.5" />
+          {/* Threats Flagged */}
+          <Card padding="md" className="space-y-1.5">
+            <div className="flex items-center justify-between text-content-secondary dark:text-dark-secondaryText">
+              <span className="text-[11px] font-semibold uppercase tracking-wider font-mono">Threats Flagged</span>
+              <div className="p-1.5 rounded-md bg-status-danger-bg text-status-danger">
+                <ShieldAlert className="w-3.5 h-3.5" />
+              </div>
             </div>
-          </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-status-danger font-mono tracking-tight">
-            {stats?.threatsBlocked ?? 0}
-          </p>
-          <span className="text-[11px] text-status-danger font-medium block">
-            Phishing & Disguised UPI Intercepted
-          </span>
-        </Card>
+            <p className="text-2xl sm:text-3xl font-extrabold text-status-danger font-mono tracking-tight">
+              {stats?.threatsBlocked ?? 0}
+            </p>
+            <span className="text-[11px] text-content-muted dark:text-dark-muted block">
+              Suspicious + dangerous
+            </span>
+          </Card>
 
-        {/* Verified Safe */}
-        <Card padding="md" className="space-y-1.5">
-          <div className="flex items-center justify-between text-content-secondary dark:text-dark-secondaryText">
-            <span className="text-[11px] font-semibold uppercase tracking-wider font-mono">Verified Safe</span>
-            <div className="p-1.5 rounded-md bg-status-success-bg text-status-success">
-              <ShieldCheck className="w-3.5 h-3.5" />
+          {/* Marked Safe */}
+          <Card padding="md" className="space-y-1.5">
+            <div className="flex items-center justify-between text-content-secondary dark:text-dark-secondaryText">
+              <span className="text-[11px] font-semibold uppercase tracking-wider font-mono">Marked Safe</span>
+              <div className="p-1.5 rounded-md bg-status-success-bg text-status-success">
+                <ShieldCheck className="w-3.5 h-3.5" />
+              </div>
             </div>
-          </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-status-success font-mono tracking-tight">
-            {stats?.safeCount ?? 0}
-          </p>
-          <span className="text-[11px] text-content-muted dark:text-dark-muted block">
-            Passed all security benchmarks
-          </span>
-        </Card>
+            <p className="text-2xl sm:text-3xl font-extrabold text-status-success font-mono tracking-tight">
+              {stats?.safeCount ?? 0}
+            </p>
+            <span className="text-[11px] text-content-muted dark:text-dark-muted block">
+              No threats detected
+            </span>
+          </Card>
 
-        {/* Privacy Integrity */}
-        <Card padding="md" className="space-y-1.5">
-          <div className="flex items-center justify-between text-content-secondary dark:text-dark-secondaryText">
-            <span className="text-[11px] font-semibold uppercase tracking-wider font-mono">Privacy Rating</span>
-            <div className="p-1.5 rounded-md bg-brand-blue-subtle text-brand-blue">
-              <Lock className="w-3.5 h-3.5" />
+          {/* Raw content stored */}
+          <Card padding="md" className="space-y-1.5">
+            <div className="flex items-center justify-between text-content-secondary dark:text-dark-secondaryText">
+              <span className="text-[11px] font-semibold uppercase tracking-wider font-mono">Raw content stored</span>
+              <div className="p-1.5 rounded-md bg-brand-blue-subtle text-brand-blue">
+                <Lock className="w-3.5 h-3.5" />
+              </div>
             </div>
-          </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-content-primary dark:text-dark-primary font-mono tracking-tight">
-            100%
-          </p>
-          <span className="text-[11px] text-content-muted dark:text-dark-muted block">
-            0 Raw URLs/texts retained
-          </span>
-        </Card>
+            <p className="text-2xl sm:text-3xl font-extrabold text-content-primary dark:text-dark-primary font-mono tracking-tight">
+              0
+            </p>
+            <span className="text-[11px] text-content-muted dark:text-dark-muted block">
+              Only hashes are kept
+            </span>
+          </Card>
 
-      </div>
+        </div>
+      )}
 
       {/* 3. Analytics Visualizations: Donut + Line Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -193,7 +202,9 @@ export default function DashboardPage() {
           </div>
 
           <div className="h-56 w-full flex items-center justify-center">
-            {stats && stats.totalScans > 0 ? (
+            {loading ? (
+              <Skeleton className="h-56 w-full rounded-xl" />
+            ) : stats && stats.totalScans > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -209,12 +220,15 @@ export default function DashboardPage() {
                   </Pie>
                   <RechartsTooltip
                     contentStyle={{
-                      backgroundColor: '#FFFFFF',
-                      borderColor: '#E2E8E5',
+                      backgroundColor: isDark ? '#1A232C' : '#FFFFFF',
+                      borderColor: isDark ? '#2C3A47' : '#E2E8E5',
                       borderRadius: '8px',
-                      color: '#202B35',
+                      color: isDark ? '#F0F4F8' : '#202B35',
                       fontSize: '12px',
                       boxShadow: '0 4px 6px -1px rgba(16, 24, 40, 0.08)'
+                    }}
+                    itemStyle={{
+                      color: isDark ? '#F0F4F8' : '#202B35'
                     }}
                   />
                 </PieChart>
@@ -257,28 +271,33 @@ export default function DashboardPage() {
           </div>
 
           <div className="h-56 w-full">
-            {stats?.scansOverTime ? (
+            {loading ? (
+              <Skeleton className="h-56 w-full rounded-xl" />
+            ) : stats?.scansOverTime ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={stats.scansOverTime}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#EDF1EF" />
-                  <XAxis dataKey="date" stroke="#89959D" fontSize={11} fontStyle="monospace" />
-                  <YAxis stroke="#89959D" fontSize={11} allowDecimals={false} fontStyle="monospace" />
+                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#2C3A47' : '#EDF1EF'} />
+                  <XAxis dataKey="date" stroke={isDark ? '#8795A5' : '#89959D'} fontSize={11} fontStyle="monospace" />
+                  <YAxis stroke={isDark ? '#8795A5' : '#89959D'} fontSize={11} allowDecimals={false} fontStyle="monospace" />
                   <RechartsTooltip
                     contentStyle={{
-                      backgroundColor: '#FFFFFF',
-                      borderColor: '#E2E8E5',
+                      backgroundColor: isDark ? '#1A232C' : '#FFFFFF',
+                      borderColor: isDark ? '#2C3A47' : '#E2E8E5',
                       borderRadius: '8px',
-                      color: '#202B35',
+                      color: isDark ? '#F0F4F8' : '#202B35',
                       fontSize: '12px',
                       boxShadow: '0 4px 6px -1px rgba(16, 24, 40, 0.08)'
+                    }}
+                    itemStyle={{
+                      color: isDark ? '#F0F4F8' : '#202B35'
                     }}
                   />
                   <Line
                     type="monotone"
                     dataKey="scans"
-                    stroke="#167D73"
+                    stroke={isDark ? '#21A699' : '#167D73'}
                     strokeWidth={2.5}
-                    dot={{ fill: '#167D73', r: 3 }}
+                    dot={{ fill: isDark ? '#21A699' : '#167D73', r: 3 }}
                     activeDot={{ r: 5 }}
                   />
                 </LineChart>
@@ -337,11 +356,11 @@ export default function DashboardPage() {
                 <thead>
                   <tr className="border-b border-border dark:border-dark-border text-content-muted dark:text-dark-muted font-mono uppercase text-[10px]">
                     <th className="py-2.5 px-3">Type</th>
-                    <th className="py-2.5 px-3">Zero-Knowledge Fingerprint</th>
+                    <th className="py-2.5 px-3">Scan ID</th>
                     <th className="py-2.5 px-3">Verdict</th>
-                    <th className="py-2.5 px-3">Risk Score</th>
-                    <th className="py-2.5 px-3">Threat Category</th>
-                    <th className="py-2.5 px-3">Audit Timestamp</th>
+                    <th className="py-2.5 px-3">Risk</th>
+                    <th className="py-2.5 px-3">Category</th>
+                    <th className="py-2.5 px-3">Scanned</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60 dark:divide-dark-border/40 font-mono">
@@ -353,8 +372,8 @@ export default function DashboardPage() {
                         <td className="py-2.5 px-3 uppercase font-bold text-brand-teal">
                           {item.input_type}
                         </td>
-                        <td className="py-2.5 px-3 text-content-primary dark:text-dark-primary">
-                          {item.masked_identifier}
+                        <td className="py-2.5 px-3 text-content-primary dark:text-dark-primary font-mono font-medium">
+                          {'#' + (item.content_hash ? item.content_hash.slice(0, 8) : (item.id || '').slice(0, 8))}
                         </td>
                         <td className="py-2.5 px-3">
                           <Badge variant={variant} size="xs">
@@ -376,13 +395,19 @@ export default function DashboardPage() {
                 </tbody>
               </table>
             </div>
+          ) : history.length === 0 ? (
+            <EmptyState
+              icon={Inbox}
+              title="No scans yet"
+              description="Scanned items will appear here with cryptographic HMAC fingerprints."
+              actionLabel="Open Threat Scanner"
+              onAction={() => navigate('/scan')}
+            />
           ) : (
             <EmptyState
               icon={Inbox}
-              title="No scan records match this filter"
-              description="Scanned items will appear here with cryptographic HMAC fingerprints."
-              actionLabel="Launch Threat Scanner"
-              onAction={() => window.location.href = '/scan'}
+              title="No scans match this filter"
+              description="Try selecting a different verdict filter to view matching scan logs."
             />
           )}
         </Card>

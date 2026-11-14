@@ -4,7 +4,7 @@ import { Shield, Lock, EyeOff, Cpu, CheckCircle2 } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="border-t border-border dark:border-dark-border bg-white dark:bg-dark-surface pt-12 pb-24 md:pb-12 text-sm text-content-secondary dark:text-dark-secondaryText transition-colors duration-150">
+    <footer className="border-t border-border dark:border-dark-border bg-white dark:bg-dark-surface pt-12 pb-12 text-sm text-content-secondary dark:text-dark-secondaryText transition-colors duration-150">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
           
@@ -45,6 +45,9 @@ export default function Footer() {
             <ul className="space-y-2 text-xs">
               <li>
                 <Link to="/scan" className="hover:text-content-primary dark:hover:text-dark-primary transition-colors">Unified Threat Scanner</Link>
+              </li>
+              <li>
+                <Link to="/media" className="hover:text-content-primary dark:hover:text-dark-primary transition-colors">Media Authenticity</Link>
               </li>
               <li>
                 <Link to="/dashboard" className="hover:text-content-primary dark:hover:text-dark-primary transition-colors">Security Dashboard</Link>

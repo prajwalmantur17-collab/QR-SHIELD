@@ -2,10 +2,10 @@
   "name": "QR Shield - AI Security, Privacy & Trust",
   "short_name": "QR Shield",
   "description": "Zero-knowledge AI scam & phishing detection for QR codes, links and messages",
-  "start_url": "/",
+  "start_url": "/scan",
   "display": "standalone",
-  "background_color": "#0B1020",
-  "theme_color": "#6366F1",
+  "background_color": "#F7F8F6",
+  "theme_color": "#167D73",
   "icons": [
     {
       "src": "/icon-192.png",

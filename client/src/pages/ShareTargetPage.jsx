@@ -7,12 +7,16 @@ import ScanProgress from '../components/scan/ScanProgress';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
+import PageHeader from '../components/layout/PageHeader';
+import usePageTitle from '../hooks/usePageTitle';
 
 export default function ShareTargetPage() {
+  usePageTitle('Quick Share Target');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const [isScanning, setIsScanning] = useState(true);
+  const [isScanning, setIsScanning] = useState(false);
+  const [emptyPayload, setEmptyPayload] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
 
@@ -24,10 +28,13 @@ export default function ShareTargetPage() {
     const payload = (url || text || title).trim();
 
     if (!payload) {
-      setErrorMsg('No content received from share target.');
+      setEmptyPayload(true);
       setIsScanning(false);
+      setErrorMsg(null);
       return;
     }
+
+    setEmptyPayload(false);
 
     const processSharedContent = async () => {
       setIsScanning(true);
@@ -55,12 +62,16 @@ export default function ShareTargetPage() {
   }, [searchParams]);
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 select-none">
-      <div className="flex items-center space-x-2">
-        <Badge variant="teal" size="sm" icon={Share2} dot>
-          PWA Web Share Target Analysis
-        </Badge>
-      </div>
+    <div className="max-w-3xl mx-auto space-y-6">
+      <PageHeader
+        title="Threat Scanner"
+        description="PWA Web Share Target: inspect shared links and text messages."
+        right={
+          <Badge variant="teal" size="sm" icon={Share2} dot>
+            PWA Share Target
+          </Badge>
+        }
+      />
 
       {isScanning && (
         <Card padding="lg">
@@ -68,7 +79,32 @@ export default function ShareTargetPage() {
         </Card>
       )}
 
-      {errorMsg && (
+      {emptyPayload && !isScanning && (
+        <Card padding="lg" className="text-center space-y-3">
+          <div className="w-10 h-10 rounded-xl bg-canvas-subtle dark:bg-dark-secondary text-brand-teal flex items-center justify-center mx-auto">
+            <Share2 className="w-5 h-5" />
+          </div>
+          <h3 className="text-sm font-bold text-content-primary dark:text-dark-primary">
+            Quick Share Target
+          </h3>
+          <p className="text-xs text-content-secondary dark:text-dark-secondaryText max-w-sm mx-auto leading-relaxed">
+            Share a link or text from another app to scan it here
+          </p>
+          <div className="pt-2">
+            <Button
+              size="sm"
+              variant="primary"
+              icon={ArrowRight}
+              iconPosition="right"
+              onClick={() => navigate('/scan')}
+            >
+              Open Threat Scanner
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {errorMsg && !emptyPayload && (
         <Card padding="lg" className="border-status-danger-border/60 text-center space-y-3">
           <div className="w-10 h-10 rounded-xl bg-status-danger-bg text-status-danger flex items-center justify-center mx-auto">
             <AlertCircle className="w-5 h-5" />
