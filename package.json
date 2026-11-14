@@ -1,0 +1,12 @@
+{
+  "name": "qr-shield-root",
+  "version": "1.0.0",
+  "description": "QR Shield - AI Security, Privacy & Trust Platform",
+  "private": true,
+  "scripts": {
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "seed": "npm run seed --prefix server",
+    "build:client": "npm run build --prefix client"
+  }
+}

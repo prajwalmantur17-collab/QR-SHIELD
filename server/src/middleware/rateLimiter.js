@@ -1,0 +1,37 @@
+import rateLimit from 'express-rate-limit';
+
+// Auth endpoints rate limiter: 10 requests per 15 mins
+export const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: {
+    error: 'Too many authentication attempts from this IP. Please try again after 15 minutes.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// Scan limiter: 5 scans / day for guests, 60 / hour for logged-in users
+export const scanLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  max: (req) => {
+    // If authenticated user, grant 60 per hour (or up to 1440/day)
+    if (req.user) {
+      return 1440;
+    }
+    // Guest limit: 5 scans per day
+    return 5;
+  },
+  keyGenerator: (req) => {
+    if (req.user && req.user.id) {
+      return `user_${req.user.id}`;
+    }
+    // Guest IP fallback
+    return req.ip || req.headers['x-forwarded-for'] || 'guest_client';
+  },
+  message: {
+    error: 'Daily guest scan limit reached (5 scans/day). Please sign up for a free account to unlock higher scan limits!'
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
