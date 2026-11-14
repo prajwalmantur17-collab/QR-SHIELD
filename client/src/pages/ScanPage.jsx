@@ -187,6 +187,7 @@ export default function ScanPage() {
 
   // Auto-load benchmark if navigated from Awareness Page
   useEffect(() => {
+    voiceAssistant.prefetchAnnouncements();
     if (location.state?.sample) {
       const sample = location.state.sample;
       navigate('/scan', { replace: true, state: null });

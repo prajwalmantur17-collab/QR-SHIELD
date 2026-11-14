@@ -41,6 +41,25 @@ class VoiceAssistantService {
     this.lastAnnouncedKey = null;
     this.state = 'ready'; // 'ready' | 'generating' | 'speaking' | 'paused' | 'completed' | 'error'
     this.subscribers = new Set();
+
+    // Auto-unlock audio permission on user's first interaction
+    if (typeof window !== 'undefined') {
+      const unlockAudio = () => {
+        try {
+          if (!this.audioElement) {
+            this.audioElement = new Audio();
+          }
+          // Resume Web Audio Context if suspended
+          if (window.AudioContext || window.webkitAudioContext) {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if (ctx.state === 'suspended') ctx.resume();
+          }
+        } catch (_) {}
+      };
+      window.addEventListener('click', unlockAudio, { once: true, passive: true });
+      window.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
+      window.addEventListener('keydown', unlockAudio, { once: true, passive: true });
+    }
   }
 
   subscribe(callback) {
@@ -83,6 +102,9 @@ class VoiceAssistantService {
     }
 
     this.notify();
+
+    // Prefetch common announcements for newly chosen language in background
+    this.prefetchAnnouncements(newLang);
 
     // If was actively speaking, replay immediately in newly chosen language
     if (this.state === 'speaking' || this.state === 'generating') {
@@ -323,6 +345,23 @@ class VoiceAssistantService {
     if (this.currentResultType) {
       this.logActivity('Voice announcement played');
       this.announce(this.currentResultType, null, true);
+    }
+  }
+
+  // Background pre-fetch for instant audio playback upon scan
+  async prefetchAnnouncements(lang = this.language) {
+    if (!this.enabled || typeof window === 'undefined') return;
+    const types = ['safe', 'suspicious', 'dangerous'];
+    for (const type of types) {
+      const cacheKey = `${lang}_${type}`;
+      if (!this.audioCache.has(cacheKey)) {
+        try {
+          const res = await api.post('/voice/announce', { language: lang, resultType: type });
+          if (res.data?.audioBase64) {
+            this.audioCache.set(cacheKey, `data:audio/mpeg;base64,${res.data.audioBase64}`);
+          }
+        } catch (_) {}
+      }
     }
   }
 
