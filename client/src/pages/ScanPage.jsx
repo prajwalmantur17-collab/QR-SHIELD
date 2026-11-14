@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   QrCode, 
@@ -165,6 +166,14 @@ export default function ScanPage() {
       handleScanMessage(sample.content);
     }
   };
+
+  // Auto-load benchmark if navigated from Awareness Page
+  const location = useLocation();
+  useEffect(() => {
+    if (location.state?.sample) {
+      handleSelectSample(location.state.sample);
+    }
+  }, [location.state]);
 
   const handleResetScan = () => {
     setScanResult(null);
