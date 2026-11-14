@@ -4,6 +4,9 @@
   "description": "QR Shield - AI Security, Privacy & Trust Platform",
   "private": true,
   "scripts": {
+    "postinstall": "npm install --prefix server",
+    "build": "npm install --prefix server",
+    "start": "npm start --prefix server",
     "dev:server": "npm run dev --prefix server",
     "dev:client": "npm run dev --prefix client",
     "seed": "npm run seed --prefix server",
