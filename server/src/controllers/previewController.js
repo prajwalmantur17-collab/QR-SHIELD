@@ -11,7 +11,11 @@ export async function handleSafePreview(req, res) {
       });
     }
 
-    const { url } = validated.data;
+    let { url } = validated.data;
+    url = url.trim();
+    if (!/^https?:\/\//i.test(url)) {
+      url = 'https://' + url;
+    }
     const previewData = await generateSafePreview(url);
     return res.json(previewData);
   } catch (err) {

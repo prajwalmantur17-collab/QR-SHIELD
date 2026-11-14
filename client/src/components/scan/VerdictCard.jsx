@@ -51,7 +51,10 @@ export default function VerdictCard({ result, onScanAnother }) {
   const previewableUrl = 
     (hops && hops.length > 0 && hops[hops.length - 1] && /^https?:\/\//i.test(hops[hops.length - 1]) ? hops[hops.length - 1] : null) ||
     (result.finalUrl && /^https?:\/\//i.test(result.finalUrl) ? result.finalUrl : null) ||
-    (domain && domain.includes('.') ? `https://${domain}` : null);
+    (result.targetUrl && /^https?:\/\//i.test(result.targetUrl) ? result.targetUrl : null) ||
+    (result.scannedContent && /^https?:\/\//i.test(result.scannedContent) ? result.scannedContent : null) ||
+    (result.scannedContent && /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/i.test(result.scannedContent) ? `https://${result.scannedContent}` : null) ||
+    (domain && domain.includes('.') ? (domain.startsWith('http') ? domain : `https://${domain}`) : null);
 
   // Status mapping
   const verdictConfig = {
@@ -290,7 +293,7 @@ Verified with Zero-Knowledge Hashes. Scan before you trust.`;
       {previewableUrl && (
         <SafeLinkPreview
           targetUrl={previewableUrl}
-          domain={domain}
+          domain={domain || result.domain || (previewableUrl ? previewableUrl.replace(/^https?:\/\//i, '').split('/')[0] : '')}
           verdict={verdict}
           riskScore={risk_score}
         />

@@ -70,7 +70,13 @@ export default function ScanPage() {
 
     try {
       const res = await api.post('/scan/link', { url: trimmed });
-      setScanResult(res.data);
+      const normalized = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+      setScanResult({
+        ...res.data,
+        targetUrl: res.data.targetUrl || res.data.finalUrl || normalized,
+        finalUrl: res.data.finalUrl || normalized,
+        domain: res.data.domain || normalized.replace(/^https?:\/\//i, '').split('/')[0]
+      });
     } catch (err) {
       const msg = err.response?.data?.error || 'Failed to analyze URL. Please check your internet connection.';
       setErrorMsg(msg);
@@ -82,13 +88,31 @@ export default function ScanPage() {
   // Run QR scan (from camera decode or image upload)
   const handleScanQr = async (decodedText) => {
     if (!decodedText || !decodedText.trim()) return;
+    const trimmed = decodedText.trim();
     setIsScanning(true);
     setErrorMsg(null);
     setScanResult(null);
 
     try {
-      const res = await api.post('/scan/qr', { content: decodedText.trim() });
-      setScanResult(res.data);
+      const res = await api.post('/scan/qr', { content: trimmed });
+      // Extract URL if present in decoded QR string
+      let rawUrl = null;
+      if (/^https?:\/\//i.test(trimmed)) {
+        rawUrl = trimmed;
+      } else if (/^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/i.test(trimmed)) {
+        rawUrl = 'https://' + trimmed;
+      } else {
+        const urlMatch = trimmed.match(/https?:\/\/[^\s]+/i);
+        if (urlMatch) rawUrl = urlMatch[0];
+      }
+
+      setScanResult({
+        ...res.data,
+        scannedContent: trimmed,
+        targetUrl: res.data.targetUrl || res.data.finalUrl || rawUrl,
+        finalUrl: res.data.finalUrl || rawUrl,
+        domain: res.data.domain || (rawUrl ? rawUrl.replace(/^https?:\/\//i, '').split('/')[0] : undefined)
+      });
     } catch (err) {
       const msg = err.response?.data?.error || 'Failed to analyze QR code content.';
       setErrorMsg(msg);
@@ -110,7 +134,13 @@ export default function ScanPage() {
 
     try {
       const res = await api.post('/scan/message', { message: trimmed });
-      setScanResult(res.data);
+      const urlMatch = trimmed.match(/https?:\/\/[^\s]+/i);
+      setScanResult({
+        ...res.data,
+        targetUrl: res.data.targetUrl || res.data.finalUrl || (urlMatch ? urlMatch[0] : undefined),
+        finalUrl: res.data.finalUrl || (urlMatch ? urlMatch[0] : undefined),
+        domain: res.data.domain || (urlMatch ? urlMatch[0].replace(/^https?:\/\//i, '').split('/')[0] : undefined)
+      });
     } catch (err) {
       const msg = err.response?.data?.error || 'Failed to scan message. Please try again.';
       setErrorMsg(msg);

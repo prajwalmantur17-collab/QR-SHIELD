@@ -232,36 +232,62 @@ export async function fetchSafeMetadata(targetUrl) {
 /**
  * Fetches an isolated visual snapshot from a dedicated rendering endpoint,
  * verifies it is a valid image, and returns it as a Base64 data URL.
+ * Automatically detects and bypasses asynchronous placeholders (e.g. WordPress mshots).
  */
 export async function getIsolatedSnapshotImage(targetUrl, domain) {
-  // Candidate rendering services running in isolated cloud sandboxes
-  const snapshotProviders = [
-    `https://image.thum.io/get/width/1024/crop/650/noanimate/${targetUrl}`,
-    `https://s0.wp.com/mshots/v1/${encodeURIComponent(targetUrl)}?w=1024&h=650`
-  ];
+  // 1. Try thum.io isolated screenshot renderer
+  try {
+    const thumUrl = `https://image.thum.io/get/width/1024/crop/650/noanimate/${targetUrl}`;
+    const res = await axios({
+      method: 'GET',
+      url: thumUrl,
+      timeout: 3500,
+      responseType: 'arraybuffer',
+      maxContentLength: 3 * 1024 * 1024
+    });
 
-  for (const providerUrl of snapshotProviders) {
+    const contentType = res.headers['content-type'] || '';
+    if (contentType.startsWith('image/') && res.data.length > 10000) {
+      const base64 = Buffer.from(res.data).toString('base64');
+      return `data:${contentType};base64,${base64}`;
+    }
+  } catch {
+    // thum.io unavailable, fallback to mshots
+  }
+
+  // 2. Try WordPress mshots with polling retry to bypass async placeholder
+  const mshotsUrl = `https://s0.wp.com/mshots/v1/${encodeURIComponent(targetUrl)}?w=1024&h=650`;
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const res = await axios({
         method: 'GET',
-        url: providerUrl,
-        timeout: 5000,
+        url: mshotsUrl,
+        timeout: 4500,
         responseType: 'arraybuffer',
-        maxContentLength: 2 * 1024 * 1024 // 2MB limit
+        maxContentLength: 3 * 1024 * 1024
       });
 
       const contentType = res.headers['content-type'] || '';
-      if (contentType.startsWith('image/')) {
+      const len = res.data.length;
+      const hash = crypto.createHash('md5').update(res.data).digest('hex');
+      // WordPress mshots placeholder image is ~8.7KB with hash e89e34619e53928489a0c703c761cd58
+      const isPlaceholder = len < 10000 || hash === 'e89e34619e53928489a0c703c761cd58';
+
+      if (contentType.startsWith('image/') && !isPlaceholder) {
         const base64 = Buffer.from(res.data).toString('base64');
         return `data:${contentType};base64,${base64}`;
       }
     } catch {
-      // Try next provider
+      // Retry
+    }
+
+    if (attempt < 2) {
+      await new Promise(r => setTimeout(r, 1800));
     }
   }
 
   // If external renderers are unreachable or target blocks bots,
-  // return an SVG visual representation indicating sandboxed inspection
+  // return null so the UI renders the verified metadata card
   return null;
 }
 
@@ -269,13 +295,17 @@ export async function getIsolatedSnapshotImage(targetUrl, domain) {
  * Generates full safe link preview
  */
 export async function generateSafePreview(url) {
+  let normalizedUrl = (url || '').trim();
+  if (!/^https?:\/\//i.test(normalizedUrl)) {
+    normalizedUrl = 'https://' + normalizedUrl;
+  }
   const previewId = `prev_${crypto.randomBytes(8).toString('hex')}`;
 
   // Step 1: Strict SSRF & DNS validation
-  await validateTargetWithDns(url);
+  await validateTargetWithDns(normalizedUrl);
 
   // Step 2: Expand redirects safely with per-hop DNS checks
-  const redirectInfo = await expandWithStrictSsrf(url, 5);
+  const redirectInfo = await expandWithStrictSsrf(normalizedUrl, 5);
   const finalUrl = redirectInfo.finalUrl;
   const domain = redirectInfo.finalDomain;
 

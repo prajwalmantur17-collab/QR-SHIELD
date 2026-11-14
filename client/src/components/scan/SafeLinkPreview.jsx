@@ -339,13 +339,16 @@ export default function SafeLinkPreview({ targetUrl, domain, verdict = 'safe', r
 
                     {/* Screenshot Container */}
                     <div className="relative rounded-xl border border-border dark:border-dark-border bg-canvas overflow-hidden shadow-subtle">
-                      {previewData.screenshot ? (
+                      {previewData.screenshot && previewData.screenshot.length > 12000 ? (
                         <div className="relative group">
                           <img
                             src={previewData.screenshot}
                             alt={`Isolated visual snapshot of ${previewData.domain}`}
                             className="w-full h-auto max-h-[500px] object-cover object-top select-none pointer-events-none"
                             loading="eager"
+                            onError={() => {
+                              setPreviewData((prev) => ({ ...prev, screenshot: null }));
+                            }}
                           />
                           <div className="absolute bottom-2 right-2 px-2.5 py-1 rounded-md bg-black/70 backdrop-blur-md text-white text-[10px] font-mono flex items-center space-x-1">
                             <Lock className="w-2.5 h-2.5 text-brand-teal" />

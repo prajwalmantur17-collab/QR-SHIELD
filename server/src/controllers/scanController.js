@@ -36,6 +36,8 @@ export async function scanLink(req, res) {
         contentHash,
         domainHash,
         domain,
+        targetUrl: url,
+        finalUrl: url,
         verdict: cachedScan.verdict,
         risk_score: cachedScan.risk_score,
         scam_category: cachedScan.scam_category,
@@ -95,6 +97,8 @@ export async function scanLink(req, res) {
       contentHash,
       domainHash,
       domain: redirectInfo.finalDomain || domain,
+      targetUrl: url,
+      finalUrl: redirectInfo.finalUrl,
       verdict: verdictData.verdict,
       risk_score: verdictData.risk_score,
       scam_category: verdictData.scam_category,
@@ -103,7 +107,6 @@ export async function scanLink(req, res) {
       recommended_action: verdictData.recommended_action,
       signals: verdictData.signals,
       hops: redirectInfo.hops,
-      finalUrl: redirectInfo.finalUrl,
       hopCount: redirectInfo.hopCount,
       isShortened: redirectInfo.isShortened,
       isHttps: redirectInfo.isHttps,
@@ -132,11 +135,27 @@ export async function scanQR(req, res) {
     // Check 24-hour Cache
     const cachedScan = await db.findScanByContentHash(contentHash);
     if (cachedScan) {
+      let resolvedUrl = undefined;
+      let resolvedDomain = undefined;
+      if (/^https?:\/\//i.test(content)) {
+        resolvedUrl = content;
+        resolvedDomain = extractDomain(content);
+      } else if (/^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/i.test(content)) {
+        resolvedUrl = 'https://' + content;
+        resolvedDomain = extractDomain(resolvedUrl);
+      }
+
       return res.json({
         cached: true,
         inputType: cachedScan.input_type,
         contentHash,
         domainHash: cachedScan.domain_hash,
+        domain: resolvedDomain,
+        targetUrl: resolvedUrl,
+        finalUrl: resolvedUrl,
+        hops: resolvedUrl ? [resolvedUrl] : [],
+        hopCount: 0,
+        isHttps: resolvedUrl ? resolvedUrl.startsWith('https://') : false,
         verdict: cachedScan.verdict,
         risk_score: cachedScan.risk_score,
         scam_category: cachedScan.scam_category,
@@ -210,11 +229,17 @@ export async function scanQR(req, res) {
       signals: verdictData.signals
     });
 
+    const resolvedFinalUrl = redirectInfo ? redirectInfo.finalUrl : (isUrl ? (/^https?:\/\//i.test(content) ? content : 'https://' + content) : undefined);
+    const resolvedDomain = redirectInfo?.finalDomain || (resolvedFinalUrl ? extractDomain(resolvedFinalUrl) : undefined);
+
     return res.json({
       cached: false,
       inputType,
       contentHash,
       domainHash,
+      domain: resolvedDomain,
+      targetUrl: resolvedFinalUrl,
+      finalUrl: resolvedFinalUrl,
       verdict: verdictData.verdict,
       risk_score: verdictData.risk_score,
       scam_category: verdictData.scam_category,
@@ -223,9 +248,9 @@ export async function scanQR(req, res) {
       recommended_action: verdictData.recommended_action,
       signals: verdictData.signals,
       upiDetails,
-      hops: redirectInfo ? redirectInfo.hops : undefined,
-      finalUrl: redirectInfo ? redirectInfo.finalUrl : undefined,
-      hopCount: redirectInfo ? redirectInfo.hopCount : undefined
+      hops: redirectInfo ? redirectInfo.hops : (resolvedFinalUrl ? [resolvedFinalUrl] : undefined),
+      hopCount: redirectInfo ? redirectInfo.hopCount : 0,
+      isHttps: redirectInfo ? redirectInfo.isHttps : (resolvedFinalUrl ? resolvedFinalUrl.startsWith('https://') : false)
     });
   } catch (error) {
     console.error('scanQR error:', error);
