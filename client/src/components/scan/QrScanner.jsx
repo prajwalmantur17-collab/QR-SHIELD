@@ -15,8 +15,17 @@ export default function QrScanner({ onScan, isScanning }) {
   const startCamera = async () => {
     try {
       setCameraError(null);
-      if (scannerRef.current && scannerRef.current.isScanning) {
-        await scannerRef.current.stop();
+      if (scannerRef.current) {
+        try {
+          if (scannerRef.current.isScanning) {
+            await scannerRef.current.stop();
+          }
+        } catch (_) {}
+      }
+
+      const container = document.getElementById(containerId);
+      if (!container) {
+        return;
       }
 
       const html5QrCode = new Html5Qrcode(containerId);
@@ -55,26 +64,36 @@ export default function QrScanner({ onScan, isScanning }) {
 
   // Stop Camera handler
   const stopCamera = async () => {
-    if (scannerRef.current && scannerRef.current.isScanning) {
+    if (scannerRef.current) {
       try {
-        await scannerRef.current.stop();
-        setIsCameraActive(false);
+        if (scannerRef.current.isScanning) {
+          await scannerRef.current.stop();
+        }
       } catch (err) {
-        console.error('Error stopping camera:', err);
+        console.warn('Error stopping camera:', err);
+      } finally {
+        setIsCameraActive(false);
       }
     }
   };
 
   useEffect(() => {
     if (mode === 'camera') {
-      startCamera();
+      const timer = setTimeout(() => {
+        startCamera();
+      }, 50);
+      return () => clearTimeout(timer);
     } else {
       stopCamera();
     }
 
     return () => {
-      if (scannerRef.current && scannerRef.current.isScanning) {
-        scannerRef.current.stop().catch(console.error);
+      if (scannerRef.current) {
+        try {
+          if (scannerRef.current.isScanning) {
+            scannerRef.current.stop().catch(() => {});
+          }
+        } catch (_) {}
         scannerRef.current = null;
       }
     };

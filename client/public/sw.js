@@ -1,14 +1,16 @@
-const CACHE_NAME = 'qrshield-v1';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.webmanifest'
+const CACHE_NAME = 'qrshield-v2';
+
+// Assets safe to cache (static only)
+const STATIC_ASSETS = [
+  '/manifest.webmanifest',
+  '/icon-192.png',
+  '/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+      return cache.addAll(STATIC_ASSETS).catch(() => {});
     })
   );
   self.skipWaiting();
@@ -20,6 +22,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
+            console.log('[SW] Purging outdated cache:', key);
             return caches.delete(key);
           }
         })
@@ -35,14 +38,33 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // 1. Navigation / Document requests: ALWAYS Network-First
+  // This guarantees users always get the latest index.html with correct asset hashes
+  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          return response;
+        })
+        .catch(() => {
+          return caches.match('/index.html') || caches.match('/');
+        })
+    );
+    return;
+  }
+
+  // 2. Hashed static assets in /assets/: Network first with cache fallback
+  if (event.request.url.includes('/assets/')) {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // 3. Other static files (icons, manifest): Cache first with network fallback
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request).catch(() => {
-        // Fallback to cached index for navigation
-        if (event.request.mode === 'navigate') {
-          return caches.match('/');
-        }
-      });
+    caches.match(event.request).then((cached) => {
+      return cached || fetch(event.request);
     })
   );
 });
