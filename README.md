@@ -129,8 +129,8 @@ flowchart TD
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-org/qr-shield.git
-cd qr-shield
+git clone https://github.com/prajwalmantur17-collab/QR-SHIELD.git
+cd QR-SHIELD
 ```
 
 ### 2. Configure Environment Files
@@ -248,25 +248,50 @@ Raw Input (e.g. "http://bank-kyc.xyz?token=secret")
 
 ---
 
-## 🎬 11. Demonstration Walkthrough
+## 🎬 11. Demonstration Walkthrough & Video Script
 
-1. **Test Lookalike Bank URL:**
-   - On the `/scan` page, click the **"Lookalike Typosquat URL"** sample card.
-   - Watch the stepwise progress: Rules evaluated → SSRF link expansion → Gemini threat classification.
-   - Inspect the **DANGEROUS (100/100)** verdict with the `[RULE]` chips for Brand Impersonation (PAYTM), High-Risk TLD (.top), and Insecure Connection.
-2. **Test Disguised UPI Collect QR:**
-   - Click the **"Deceptive UPI Collect QR"** sample.
-   - See the parsed payee name and requested amount, along with the warning that entering a PIN will debit funds.
-3. **Test Fake KYC SMS:**
-   - Click the **"Fake KYC Bank SMS"** sample.
-   - See the critical alert for urgency coercion and bank phishing.
-4. **Test Legitimate Website:**
-   - Click the **"Legitimate Safe Website"** sample (`github.com`).
-   - Observe the **SAFE (0/100)** verdict.
-5. **Explore Threat Analytics:**
-   - Navigate to `/dashboard` to view interactive Recharts donut and line charts.
-6. **Verify Privacy:**
-   - Visit `/privacy` to read the zero-knowledge guarantees or trigger the Right-to-Erasure data purge.
+### 3-Minute Live Demo Walkthrough (for Hackathon Video)
+
+1. **Introduction (0:00 - 0:45):**
+   - Introduce **QR Shield**: An AI-powered zero-knowledge security, privacy & trust platform.
+   - Explain the problem: Quishing (QR phishing), deceptive `upi://collect` fraud, and urgency-laden social engineering SMS/WhatsApp attacks.
+   - Highlight the design standard: Enterprise light-mode interface inspired by Stripe, Linear, and Vercel.
+
+2. **Core Feature 1: Real-Time URL & Threat Intelligence (0:45 - 1:30):**
+   - Navigate to `/scan` and select the **URL Scanner** tab.
+   - Paste a suspicious or typosquatted link (e.g., `http://paytm-security-alert.top/verify`).
+   - Click **Scan URL**.
+   - Show the dynamic progress analysis: SSRF-safe link expander → 14 deterministic heuristics → Google Gemini neural threat classification.
+   - Showcase the explainable **Verdict Card**: Semicircle Risk Gauge (100/100 Dangerous), dual-engine signal tags (`[RULE]` Brand Impersonation, `[AI]` Phishing Pretext), and plain-English actionable recommendations.
+
+3. **Core Feature 2: Camera & QR Code Scanning (1:30 - 2:05):**
+   - Switch to the **QR Code** tab.
+   - Demonstrate camera activation or drag-and-drop of a QR code image.
+   - Explain client-side decoding: the image is decoded directly inside the browser using HTML5 Canvas/Wasm, never sent to any server.
+   - Show instant parsing of UPI strings (`upi://pay` vs `upi://collect`), warning users immediately if a QR is requesting money rather than sending funds.
+
+4. **Core Feature 3: WhatsApp / SMS Message Analysis (2:05 - 2:35):**
+   - Switch to the **Message Scanner** tab.
+   - Paste a fraudulent alert (e.g., *"Dear Customer, your electricity will be disconnected tonight at 9:30 PM due to unpaid bill. Call 9876543210 immediately"*).
+   - Observe live Gemini AI detection of coercive urgency, fake authority pretexting, and phone number harvesting.
+
+5. **Privacy Center & Dashboard (2:35 - 3:00):**
+   - Navigate to `/privacy`: Show the "What We Store / What We Never Store" breakdown. Demonstrate HMAC-SHA-256 salted hashing and the **Right-to-Erasure (Delete My Data)** guarantee.
+   - Visit `/dashboard`: Showcase real-time telemetry, threat distribution charts, and velocity time-series powered by Supabase PostgreSQL.
+
+---
+
+## 🏆 12. Hackathon Compliance Checklist
+
+| Requirement | QR Shield Implementation | Status |
+|---|---|---|
+| **Theme: AI Security, Privacy & Trust** | Identifies threats, protects user privacy (HMAC zero-knowledge), and builds trust with explainable AI | ✅ Complete |
+| **Frontend Stack** | React 18, Vite, React Router v6, Tailwind CSS, Recharts, Lucide Icons | ✅ Complete |
+| **Backend Stack** | Node.js, Express, JWT, bcryptjs, Zod schema validation, Helmet, CORS | ✅ Complete |
+| **Database** | Supabase PostgreSQL (`public.scans`, `public.users`, `public.community_reports`) | ✅ Complete |
+| **AI Integration** | Google Gemini API (`gemini-3.5-flash-lite`), backend environment variables only | ✅ Complete |
+| **Source Code & Setup** | Public GitHub repository with clean architecture & full setup guide | ✅ Complete |
+| **Privacy Guarantee** | Zero raw storage of URLs/messages; camera stream decoded in-browser | ✅ Complete |
 
 ---
 
