@@ -4,6 +4,9 @@ import { Loader2, AlertCircle, Share2, ArrowRight } from 'lucide-react';
 import api from '../api/client';
 import VerdictCard from '../components/scan/VerdictCard';
 import ScanProgress from '../components/scan/ScanProgress';
+import Card from '../components/common/Card';
+import Button from '../components/common/Button';
+import Badge from '../components/common/Badge';
 
 export default function ShareTargetPage() {
   const [searchParams] = useSearchParams();
@@ -52,31 +55,42 @@ export default function ShareTargetPage() {
   }, [searchParams]);
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
-      <div className="flex items-center space-x-2 text-xs font-mono text-brand-teal uppercase tracking-wider font-semibold">
-        <Share2 className="w-4 h-4" />
-        <span>PWA Web Share Target Analysis</span>
+    <div className="max-w-3xl mx-auto space-y-6 select-none">
+      <div className="flex items-center space-x-2">
+        <Badge variant="teal" size="sm" icon={Share2} dot>
+          PWA Web Share Target Analysis
+        </Badge>
       </div>
 
       {isScanning && (
-        <div className="p-8 rounded-2xl bg-white dark:bg-dark-surface border border-border dark:border-dark-border shadow-card">
+        <Card padding="lg">
           <ScanProgress inputType="link" />
-        </div>
+        </Card>
       )}
 
       {errorMsg && (
-        <div className="p-6 rounded-2xl bg-white dark:bg-dark-surface border border-status-danger-border text-center space-y-3 shadow-card">
-          <AlertCircle className="w-8 h-8 text-status-danger mx-auto" />
-          <h3 className="text-sm font-bold text-content-primary dark:text-dark-primary">Unable to Process Shared Item</h3>
-          <p className="text-xs text-content-secondary dark:text-dark-secondaryText max-w-sm mx-auto">{errorMsg}</p>
-          <button
-            type="button"
-            onClick={() => navigate('/scan')}
-            className="px-4 py-2 rounded-lg bg-brand-teal hover:bg-brand-teal-hover text-white text-xs font-semibold shadow-subtle transition-colors"
-          >
-            Go to Scanner
-          </button>
-        </div>
+        <Card padding="lg" className="border-status-danger-border/60 text-center space-y-3">
+          <div className="w-10 h-10 rounded-xl bg-status-danger-bg text-status-danger flex items-center justify-center mx-auto">
+            <AlertCircle className="w-5 h-5" />
+          </div>
+          <h3 className="text-sm font-bold text-content-primary dark:text-dark-primary">
+            Unable to Process Shared Item
+          </h3>
+          <p className="text-xs text-content-secondary dark:text-dark-secondaryText max-w-sm mx-auto leading-relaxed">
+            {errorMsg}
+          </p>
+          <div className="pt-2">
+            <Button
+              size="sm"
+              variant="primary"
+              icon={ArrowRight}
+              iconPosition="right"
+              onClick={() => navigate('/scan')}
+            >
+              Open Threat Scanner
+            </Button>
+          </div>
+        </Card>
       )}
 
       {scanResult && (

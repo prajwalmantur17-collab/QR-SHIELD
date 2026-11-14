@@ -8,7 +8,7 @@
     --bg-surface: #FFFFFF;
     --bg-secondary: #F0F3F2;
     --text-primary: #202B35;
-    --text-secondary: #687782;
+    --text-secondary: #5F6D7E;
     --text-muted: #89959D;
     --border-main: #E2E8E5;
     --border-subtle: #EDF1EF;
@@ -35,6 +35,7 @@
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   body {
@@ -42,6 +43,7 @@
     color: var(--text-primary);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     line-height: 1.5;
+    letter-spacing: -0.011em;
   }
 
   /* Accessible focus rings */
@@ -71,18 +73,42 @@
   animation: laserSweep 3s ease-in-out infinite;
 }
 
-/* Professional card utility */
-.card-clean {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-main);
-  box-shadow: 0 1px 3px 0 rgba(16, 24, 40, 0.05), 0 1px 2px -1px rgba(16, 24, 40, 0.03);
-  border-radius: 0.75rem;
+/* Shimmer Skeleton Animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(226, 232, 229, 0.4) 0%,
+    rgba(226, 232, 229, 0.8) 50%,
+    rgba(226, 232, 229, 0.4) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite ease-in-out;
+}
+
+.dark .animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(44, 58, 71, 0.4) 0%,
+    rgba(44, 58, 71, 0.8) 50%,
+    rgba(44, 58, 71, 0.4) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite ease-in-out;
 }
 
 /* Crisp subtle scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;

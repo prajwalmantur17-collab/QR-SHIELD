@@ -1,26 +1,17 @@
 import React from 'react';
-import { Sparkles, AlertTriangle, ShieldCheck, DollarSign, MessageSquare, Globe } from 'lucide-react';
+import { Sparkles, ShieldCheck, DollarSign, MessageSquare, Globe, ArrowRight } from 'lucide-react';
+import Badge from '../common/Badge';
 
 export const SAMPLES = [
-  {
-    id: 'kyc-sms',
-    title: 'Fake KYC Bank SMS',
-    type: 'message',
-    icon: MessageSquare,
-    badge: 'Dangerous',
-    badgeColor: 'text-rose-400 bg-rose-500/10 border-rose-500/30',
-    content: 'Dear SBI Customer, your YONO account will be blocked within 24 hours. Please click http://sbi-kyc-update.xyz to update your PAN and Aadhaar immediately or call customer care.',
-    desc: 'Simulates urgent bank SMS phishing asking for KYC update on an unverified domain.'
-  },
   {
     id: 'lookalike-url',
     title: 'Lookalike Typosquat URL',
     type: 'link',
     icon: Globe,
     badge: 'Dangerous',
-    badgeColor: 'text-rose-400 bg-rose-500/10 border-rose-500/30',
+    badgeVariant: 'dangerous',
     content: 'http://paytmm-secure-cashback.top/login?verify=kyc',
-    desc: 'Typosquatting brand domain targeting Paytm on a suspicious .top TLD over HTTP.'
+    desc: 'Typosquatting brand domain targeting Paytm on an unverified .top TLD over HTTP.'
   },
   {
     id: 'upi-collect',
@@ -28,28 +19,38 @@ export const SAMPLES = [
     type: 'qr',
     icon: DollarSign,
     badge: 'Dangerous',
-    badgeColor: 'text-rose-400 bg-rose-500/10 border-rose-500/30',
+    badgeVariant: 'dangerous',
     content: 'upi://collect?pa=refund-desk-online99@paytm&pn=Electricity_Bill_Refund&am=4999&cu=INR&tn=Cashback_Refund_Approved',
-    desc: 'Disguised collect request claiming to be a refund, draining ₹4,999 upon PIN entry.'
+    desc: 'Disguised collect request claiming to be a refund, draining funds upon MPIN entry.'
+  },
+  {
+    id: 'kyc-sms',
+    title: 'Urgent Bank KYC SMS',
+    type: 'message',
+    icon: MessageSquare,
+    badge: 'Dangerous',
+    badgeVariant: 'dangerous',
+    content: 'Dear SBI Customer, your YONO account will be blocked within 24 hours. Please click http://sbi-kyc-update.xyz to update your PAN and Aadhaar immediately.',
+    desc: 'Simulates urgent bank SMS phishing asking for KYC update on an unverified domain.'
   },
   {
     id: 'safe-url',
-    title: 'Legitimate Safe Website',
+    title: 'Verified Safe Website',
     type: 'link',
     icon: ShieldCheck,
     badge: 'Safe',
-    badgeColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
+    badgeVariant: 'safe',
     content: 'https://github.com',
-    desc: 'Verified legitimate HTTPS platform with clean domain reputation.'
+    desc: 'Verified legitimate HTTPS platform with clean domain age and SSL certificates.'
   }
 ];
 
 export default function SampleCards({ onSelectSample }) {
   return (
-    <div className="space-y-3">
-      <div className="flex items-center space-x-2 text-xs font-semibold text-dark-muted uppercase tracking-wider">
-        <Sparkles className="w-3.5 h-3.5 text-brand-cyan" />
-        <span>One-Click Threat Demonstrations (Hackathon Testing)</span>
+    <div className="space-y-3 pt-2">
+      <div className="flex items-center space-x-2 text-[11px] font-semibold text-content-muted dark:text-dark-muted uppercase font-mono tracking-wider">
+        <Sparkles className="w-3.5 h-3.5 text-brand-teal" />
+        <span>One-Click Threat Simulation Benchmarks</span>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -60,28 +61,28 @@ export default function SampleCards({ onSelectSample }) {
               key={sample.id}
               type="button"
               onClick={() => onSelectSample(sample)}
-              className="text-left p-3.5 rounded-xl bg-dark-elevated/50 hover:bg-dark-elevated border border-dark-border/60 hover:border-brand-indigo/50 transition-all flex flex-col justify-between group"
+              className="text-left p-3.5 rounded-xl bg-white dark:bg-dark-surface border border-border dark:border-dark-border hover:border-brand-teal/50 shadow-subtle hover:shadow-card transition-all flex flex-col justify-between group focus:outline-none"
             >
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <div className="p-1.5 rounded-lg bg-dark-surface border border-dark-border text-brand-cyan group-hover:scale-105 transition-transform">
+                  <div className="p-1.5 rounded-lg bg-canvas-subtle dark:bg-dark-secondary text-brand-teal group-hover:scale-105 transition-transform">
                     <Icon className="w-4 h-4" />
                   </div>
-                  <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${sample.badgeColor}`}>
+                  <Badge variant={sample.badgeVariant} size="xs">
                     {sample.badge}
-                  </span>
+                  </Badge>
                 </div>
-                <h4 className="text-xs font-bold text-dark-text group-hover:text-brand-cyan transition-colors line-clamp-1">
+                <h4 className="text-xs font-bold text-content-primary dark:text-dark-primary group-hover:text-brand-teal transition-colors line-clamp-1">
                   {sample.title}
                 </h4>
-                <p className="text-[11px] text-dark-muted mt-1 line-clamp-2 leading-relaxed">
+                <p className="text-[11px] text-content-secondary dark:text-dark-secondaryText mt-1 line-clamp-2 leading-relaxed">
                   {sample.desc}
                 </p>
               </div>
 
-              <div className="mt-3 pt-2 border-t border-dark-border/40 flex items-center justify-between text-[11px] font-medium text-brand-indigo group-hover:text-brand-cyan transition-colors">
-                <span>Run Demo Test</span>
-                <span className="font-mono text-xs">→</span>
+              <div className="mt-3 pt-2 border-t border-border dark:border-dark-border flex items-center justify-between text-[11px] font-semibold text-brand-teal group-hover:translate-x-0.5 transition-transform">
+                <span>Load Benchmark</span>
+                <ArrowRight className="w-3 h-3" />
               </div>
             </button>
           );

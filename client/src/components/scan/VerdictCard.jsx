@@ -18,6 +18,8 @@ import {
 import RiskGauge from './RiskGauge';
 import SafeLinkPreview from './SafeLinkPreview';
 import api from '../../api/client';
+import Button from '../common/Button';
+import Badge from '../common/Badge';
 
 export default function VerdictCard({ result, onScanAnother }) {
   const [copied, setCopied] = useState(false);
@@ -51,25 +53,25 @@ export default function VerdictCard({ result, onScanAnother }) {
     (result.finalUrl && /^https?:\/\//i.test(result.finalUrl) ? result.finalUrl : null) ||
     (domain && domain.includes('.') ? `https://${domain}` : null);
 
-  // Enterprise status theme mapping
+  // Status mapping
   const verdictConfig = {
     safe: {
       label: 'Safe',
-      badgeClass: 'bg-status-success-bg text-status-success-text border-status-success-border',
+      variant: 'safe',
       icon: ShieldCheck,
       cardBorder: 'border-status-success-border dark:border-status-success/30',
-      summary: 'No critical security threats detected. Safe to interact with standard caution.'
+      summary: 'No critical threats detected. Safe to interact with standard caution.'
     },
     suspicious: {
       label: 'Suspicious',
-      badgeClass: 'bg-status-warning-bg text-status-warning-text border-status-warning-border',
+      variant: 'suspicious',
       icon: AlertTriangle,
       cardBorder: 'border-status-warning-border dark:border-status-warning/30',
-      summary: 'Heuristic or behavioral anomalies detected. Exercise caution and verify identity.'
+      summary: 'Heuristic anomalies detected. Exercise caution and verify identity.'
     },
     dangerous: {
       label: 'Dangerous',
-      badgeClass: 'bg-status-danger-bg text-status-danger-text border-status-danger-border',
+      variant: 'dangerous',
       icon: ShieldAlert,
       cardBorder: 'border-status-danger-border dark:border-status-danger/30',
       summary: 'High probability of phishing, credential harvesting, or payment deception.'
@@ -112,29 +114,26 @@ Verified with Zero-Knowledge Hashes. Scan before you trust.`;
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.25 }}
       className={`w-full rounded-2xl bg-white dark:bg-dark-surface border ${currentConfig.cardBorder} p-6 sm:p-8 space-y-6 shadow-card transition-colors`}
     >
-      {/* Top Banner: Status Badge, Title & Risk Score Gauge */}
+      {/* 1. Header Banner: Verdict, Category, Gauge */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-border dark:border-dark-border">
         <div className="space-y-2.5 text-center md:text-left">
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-            <span
-              className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${currentConfig.badgeClass}`}
-            >
-              <VerdictIcon className="w-4 h-4" />
-              <span>{currentConfig.label}</span>
-            </span>
+            <Badge variant={currentConfig.variant} size="md" icon={VerdictIcon} dot>
+              {currentConfig.label}
+            </Badge>
 
-            <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-medium bg-canvas-subtle dark:bg-dark-secondary text-content-secondary dark:text-dark-secondaryText border border-border dark:border-dark-border">
+            <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-md text-xs font-medium bg-canvas-subtle dark:bg-dark-secondary text-content-secondary dark:text-dark-secondaryText border border-border dark:border-dark-border">
               <span>Category:</span>
               <strong className="text-content-primary dark:text-dark-primary font-semibold ml-1">{scam_category}</strong>
             </span>
 
             {cached && (
-              <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-canvas-subtle dark:bg-dark-secondary text-brand-teal dark:text-brand-teal border border-border dark:border-dark-border">
+              <Badge variant="neutral" size="xs">
                 Cached 24h
-              </span>
+              </Badge>
             )}
           </div>
 
@@ -142,7 +141,7 @@ Verified with Zero-Knowledge Hashes. Scan before you trust.`;
             {currentConfig.summary}
           </h2>
 
-          <p className="text-xs text-content-muted dark:text-dark-muted font-mono flex items-center justify-center md:justify-start space-x-2">
+          <div className="text-[11px] text-content-muted dark:text-dark-muted font-mono flex flex-wrap items-center justify-center md:justify-start gap-x-2 gap-y-1">
             <span>SHA-256: {contentHash ? contentHash.slice(0, 16) + '...' : 'Verified'}</span>
             <span>•</span>
             <span>Confidence: {Math.round(confidence * 100)}%</span>
@@ -152,7 +151,7 @@ Verified with Zero-Knowledge Hashes. Scan before you trust.`;
                 <span className="text-brand-teal font-sans font-semibold">Gemini AI Active</span>
               </>
             )}
-          </p>
+          </div>
         </div>
 
         {/* Gauge */}
@@ -161,7 +160,7 @@ Verified with Zero-Knowledge Hashes. Scan before you trust.`;
         </div>
       </div>
 
-      {/* Recommended Action Callout */}
+      {/* 2. Recommended Safety Action */}
       {recommended_action && (
         <div
           className={`p-4 rounded-xl border flex items-start space-x-3 ${
@@ -174,21 +173,21 @@ Verified with Zero-Knowledge Hashes. Scan before you trust.`;
         >
           <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider mb-0.5">Recommended Safety Action</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider mb-0.5 font-mono">Recommended Action</h4>
             <p className="text-xs sm:text-sm font-medium leading-relaxed">{recommended_action}</p>
           </div>
         </div>
       )}
 
-      {/* UPI Details Card (if UPI QR) */}
+      {/* 3. Parsed UPI Details (if UPI QR) */}
       {upiDetails && (
         <div className="p-4 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border space-y-3">
           <div className="flex items-center justify-between border-b border-border dark:border-dark-border pb-2">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-brand-teal flex items-center space-x-1.5">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-brand-teal flex items-center space-x-1.5 font-mono">
               <DollarSign className="w-4 h-4" />
               <span>Parsed UPI Payment Details</span>
             </h4>
-            <span className="text-[11px] font-mono text-content-muted dark:text-dark-muted">Protocol: upi://</span>
+            <Badge variant="teal" size="xs">upi://</Badge>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
@@ -212,13 +211,13 @@ Verified with Zero-Knowledge Hashes. Scan before you trust.`;
         </div>
       )}
 
-      {/* Redirect Chain & Safety Preview (if URL/Link) */}
+      {/* 4. Redirect Chain & Hops Waterfall (if URL) */}
       {hops && hops.length > 0 && (
         <div className="p-4 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border space-y-3">
           <div className="flex items-center justify-between border-b border-border dark:border-dark-border pb-2">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-content-primary dark:text-dark-primary flex items-center space-x-1.5">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-content-primary dark:text-dark-primary flex items-center space-x-1.5 font-mono">
               <Layers className="w-4 h-4 text-brand-blue" />
-              <span>Link Redirect Verification ({hopCount} Hops Followed)</span>
+              <span>Redirect Chain ({hopCount} Hops Followed)</span>
             </h4>
             <div className="flex items-center space-x-2 text-[11px]">
               {isHttps ? (
@@ -243,9 +242,7 @@ Verified with Zero-Knowledge Hashes. Scan before you trust.`;
                 </span>
                 <span className="truncate max-w-[85%] text-content-primary dark:text-dark-primary">{hopUrl}</span>
                 {idx === hops.length - 1 && (
-                  <span className="text-[10px] font-sans font-semibold px-2 py-0.5 rounded bg-brand-teal-subtle text-brand-teal border border-brand-teal/20">
-                    Final Landing
-                  </span>
+                  <Badge variant="teal" size="xs">Final Destination</Badge>
                 )}
               </div>
             ))}
@@ -253,22 +250,18 @@ Verified with Zero-Knowledge Hashes. Scan before you trust.`;
         </div>
       )}
 
-      {/* Explainable Signals Breakdown */}
+      {/* 5. Explainable Signals Breakdown */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-content-primary dark:text-dark-primary flex items-center space-x-2">
-            <span>Detection Reasons & Threat Signals</span>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-content-primary dark:text-dark-primary flex items-center space-x-2 font-mono">
+            <span>Detection Reasons & Heuristics</span>
             <span className="text-xs font-normal text-content-muted dark:text-dark-muted font-mono">
-              ({signals.length} {signals.length === 1 ? 'signal' : 'signals'} evaluated)
+              ({signals.length} {signals.length === 1 ? 'signal' : 'signals'})
             </span>
           </h3>
           <div className="flex items-center space-x-2 text-[10px] font-medium">
-            <span className="px-2 py-0.5 rounded bg-brand-blue-subtle text-brand-blue-text border border-brand-blue/20">
-              RULE: Deterministic
-            </span>
-            <span className="px-2 py-0.5 rounded bg-brand-teal-subtle text-brand-teal-text border border-brand-teal/20">
-              AI: Gemini Neural
-            </span>
+            <Badge variant="blue" size="xs">RULE: Deterministic</Badge>
+            <Badge variant="teal" size="xs">AI: Gemini Neural</Badge>
           </div>
         </div>
 
@@ -280,15 +273,9 @@ Verified with Zero-Knowledge Hashes. Scan before you trust.`;
                 key={idx}
                 className="p-3.5 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border flex items-start space-x-3 text-xs"
               >
-                <span
-                  className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold flex-shrink-0 mt-0.5 ${
-                    isRule
-                      ? 'bg-brand-blue-subtle text-brand-blue-text border border-brand-blue/30'
-                      : 'bg-brand-teal-subtle text-brand-teal-text border border-brand-teal/30'
-                  }`}
-                >
+                <Badge variant={isRule ? 'blue' : 'teal'} size="xs" className="mt-0.5 flex-shrink-0">
                   {isRule ? 'RULE' : 'AI'}
-                </span>
+                </Badge>
                 <div className="flex-1">
                   <p className="font-semibold text-content-primary dark:text-dark-primary">{sig.label}</p>
                   <p className="text-content-secondary dark:text-dark-secondaryText mt-0.5 leading-relaxed">{sig.detail}</p>
@@ -299,7 +286,7 @@ Verified with Zero-Knowledge Hashes. Scan before you trust.`;
         </div>
       </div>
 
-      {/* Safe Link Preview (Isolated Air-Gap Inspection) */}
+      {/* 6. Safe Link Preview (Isolated Air-Gap Inspection) */}
       {previewableUrl && (
         <SafeLinkPreview
           targetUrl={previewableUrl}
@@ -309,50 +296,44 @@ Verified with Zero-Knowledge Hashes. Scan before you trust.`;
         />
       )}
 
-      {/* Action Buttons Bar */}
+      {/* 7. Action Buttons Bar */}
       <div className="pt-4 border-t border-border dark:border-dark-border flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center space-x-2">
           {/* Report Scam Button */}
-          <button
-            type="button"
+          <Button
+            size="sm"
+            variant={reported ? 'danger' : 'outline'}
+            icon={Flag}
             onClick={handleReportScam}
             disabled={reported || reporting}
-            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold border transition-colors ${
-              reported
-                ? 'bg-status-danger-bg text-status-danger border-status-danger-border cursor-default'
-                : 'bg-white dark:bg-dark-surface hover:bg-status-danger-bg text-content-secondary dark:text-dark-secondaryText hover:text-status-danger border-border dark:border-dark-border'
-            }`}
           >
-            <Flag className="w-3.5 h-3.5" />
-            <span>
-              {reported
-                ? `Blacklisted (${reportCount || '1'} reports)`
-                : reporting
-                ? 'Reporting...'
-                : 'Report as Scam'}
-            </span>
-          </button>
+            {reported
+              ? `Blacklisted (${reportCount || '1'} reports)`
+              : reporting
+              ? 'Reporting...'
+              : 'Report Scam'}
+          </Button>
 
           {/* Copy Report */}
-          <button
-            type="button"
+          <Button
+            size="sm"
+            variant="outline"
+            icon={copied ? Check : Copy}
             onClick={handleCopyReport}
-            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-medium bg-white dark:bg-dark-surface text-content-secondary dark:text-dark-secondaryText hover:text-content-primary border border-border dark:border-dark-border hover:bg-canvas-subtle transition-colors"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-status-success" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copied ? 'Copied' : 'Copy Report'}</span>
-          </button>
+            {copied ? 'Copied' : 'Copy Audit Report'}
+          </Button>
         </div>
 
         {/* Scan Another Item */}
-        <button
-          type="button"
+        <Button
+          size="sm"
+          variant="primary"
+          icon={RefreshCw}
           onClick={onScanAnother}
-          className="flex items-center space-x-2 px-5 py-2 rounded-lg text-xs font-semibold bg-brand-teal text-white hover:bg-brand-teal-hover shadow-subtle transition-colors"
         >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>Scan Another Item</span>
-        </button>
+          Scan Another Item
+        </Button>
       </div>
     </motion.div>
   );

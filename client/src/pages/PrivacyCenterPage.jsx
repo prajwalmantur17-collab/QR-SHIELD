@@ -10,15 +10,56 @@ import {
   KeyRound,
   Database,
   FileCode,
-  ShieldAlert
+  ShieldAlert,
+  Fingerprint,
+  Sparkles,
+  ArrowRight,
+  Copy,
+  Check
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import Card, { CardHeader } from '../components/common/Card';
+import Badge from '../components/common/Badge';
+import Button from '../components/common/Button';
+import Modal from '../components/common/Modal';
 
 export default function PrivacyCenterPage() {
   const { user, isAuthenticated, deleteMyData } = useAuth();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [successMsg, setSuccessMsg] = useState(null);
+
+  // Interactive Live Hash Demonstrator State
+  const [demoInput, setDemoInput] = useState('https://suspicious-paytm-login.xyz/auth');
+  const [demoHash, setDemoHash] = useState('');
+  const [copiedHash, setCopiedHash] = useState(false);
+
+  // Compute standard client-side SHA-256 for live demonstration
+  React.useEffect(() => {
+    async function computeHash() {
+      if (!demoInput) {
+        setDemoHash('');
+        return;
+      }
+      try {
+        const msgBuffer = new TextEncoder().encode(demoInput);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        setDemoHash(hashHex);
+      } catch (e) {
+        setDemoHash('0x4e8a...crypto_unavailable');
+      }
+    }
+    computeHash();
+  }, [demoInput]);
+
+  const handleCopyHash = () => {
+    if (!demoHash) return;
+    navigator.clipboard.writeText(demoHash);
+    setCopiedHash(true);
+    setTimeout(() => setCopiedHash(false), 2000);
+  };
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -34,20 +75,22 @@ export default function PrivacyCenterPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
+    <div className="max-w-4xl mx-auto space-y-8 select-none">
       
-      {/* Title */}
-      <div className="text-center space-y-2 max-w-2xl mx-auto">
-        <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold text-brand-teal bg-brand-teal-subtle border border-brand-teal/20">
-          <Lock className="w-3.5 h-3.5" />
-          <span>Zero-Knowledge Privacy Architecture</span>
+      {/* 1. Header with Privacy Badge */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border dark:border-dark-border">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-extrabold text-content-primary dark:text-dark-primary tracking-tight">
+            Privacy Center & Trust Architecture
+          </h1>
+          <p className="text-xs text-content-secondary dark:text-dark-secondaryText mt-0.5">
+            Mathematical zero-knowledge guarantees: security tools should never become the data-collectors of the threats they inspect.
+          </p>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-content-primary dark:text-dark-primary tracking-tight">
-          Privacy Center & Trust Engine
-        </h1>
-        <p className="text-xs sm:text-sm text-content-secondary dark:text-dark-secondaryText">
-          We built QR Shield on a core principle: security tools should never become the data-collectors of the threats they analyze.
-        </p>
+
+        <Badge variant="teal" size="sm" dot>
+          Zero-Knowledge Active
+        </Badge>
       </div>
 
       {successMsg && (
@@ -56,35 +99,87 @@ export default function PrivacyCenterPage() {
         </div>
       )}
 
-      {/* Two-Column Comparison: What We Store vs What We Never Store */}
+      {/* 2. Interactive Zero-Knowledge Hash Demonstrator */}
+      <Card padding="md" className="space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-border dark:border-dark-border">
+          <div className="flex items-center space-x-2">
+            <Fingerprint className="w-4 h-4 text-brand-teal" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-content-primary dark:text-dark-primary font-mono">
+              Live Cryptographic Zero-Knowledge Demonstrator
+            </h3>
+          </div>
+          <Badge variant="teal" size="xs">Interactive Test</Badge>
+        </div>
+
+        <p className="text-xs text-content-secondary dark:text-dark-secondaryText leading-relaxed">
+          Type any link, message, or phone number below. Watch the irreversible cryptographic fingerprint calculate in your browser. This 64-character hash is all our telemetry database ever records.
+        </p>
+
+        <div className="space-y-3 pt-1">
+          <div>
+            <label className="text-[11px] font-semibold text-content-muted dark:text-dark-muted uppercase font-mono block mb-1">
+              Sample Input Text / URL (Simulated Raw Input):
+            </label>
+            <input
+              type="text"
+              value={demoInput}
+              onChange={(e) => setDemoInput(e.target.value)}
+              placeholder="Enter any text to see its one-way hash..."
+              className="w-full px-3.5 py-2.5 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border text-xs font-mono text-content-primary dark:text-dark-primary focus:outline-none focus:border-brand-teal"
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[11px] font-semibold text-content-muted dark:text-dark-muted uppercase font-mono block">
+                Resulting SHA-256 Cryptographic Fingerprint:
+              </label>
+              <button
+                type="button"
+                onClick={handleCopyHash}
+                className="text-[11px] font-mono text-brand-teal hover:underline flex items-center space-x-1"
+              >
+                {copiedHash ? <Check className="w-3 h-3 text-status-success" /> : <Copy className="w-3 h-3" />}
+                <span>{copiedHash ? 'Copied' : 'Copy Hash'}</span>
+              </button>
+            </div>
+
+            <div className="p-3 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border font-mono text-xs text-brand-teal break-all">
+              {demoHash || 'Enter text above to compute fingerprint...'}
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* 3. Two-Column Comparison: What We Store vs What We Never Store */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         
         {/* Column 1: What We Store */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-dark-surface border border-status-success-border dark:border-status-success/30 shadow-card space-y-4">
+        <Card padding="md" className="border-status-success-border/60 dark:border-status-success/30 space-y-4">
           <div className="flex items-center space-x-2 text-status-success">
-            <CheckCircle2 className="w-5 h-5" />
-            <h3 className="text-xs font-bold uppercase tracking-wider">What We Store</h3>
+            <CheckCircle2 className="w-4.5 h-4.5" />
+            <h3 className="text-xs font-bold uppercase tracking-wider font-mono">What We Store</h3>
           </div>
           <p className="text-xs text-content-secondary dark:text-dark-secondaryText leading-relaxed">
             Only non-reversible mathematical fingerprints and categorical scores required for rate limits and telemetry:
           </p>
 
           <ul className="space-y-2.5 text-xs">
-            <li className="flex items-start space-x-2.5 p-2.5 rounded-lg bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border">
+            <li className="flex items-start space-x-2.5 p-3 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border">
               <KeyRound className="w-4 h-4 text-brand-teal flex-shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-content-primary dark:text-dark-primary font-semibold">Salted HMAC-SHA-256 Hashes</strong>
                 <span className="text-[11px] text-content-secondary dark:text-dark-secondaryText">One-way cryptographic fingerprint of the scanned text.</span>
               </div>
             </li>
-            <li className="flex items-start space-x-2.5 p-2.5 rounded-lg bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border">
+            <li className="flex items-start space-x-2.5 p-3 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border">
               <ShieldCheck className="w-4 h-4 text-brand-teal flex-shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-content-primary dark:text-dark-primary font-semibold">Verdict & Numeric Risk Score</strong>
                 <span className="text-[11px] text-content-secondary dark:text-dark-secondaryText">"Safe", "Suspicious", or "Dangerous" + numeric risk level (0–100).</span>
               </div>
             </li>
-            <li className="flex items-start space-x-2.5 p-2.5 rounded-lg bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border">
+            <li className="flex items-start space-x-2.5 p-3 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border">
               <Database className="w-4 h-4 text-brand-teal flex-shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-content-primary dark:text-dark-primary font-semibold">Community Blacklist Domain Hashes</strong>
@@ -92,47 +187,47 @@ export default function PrivacyCenterPage() {
               </div>
             </li>
           </ul>
-        </div>
+        </Card>
 
         {/* Column 2: What We Never Store */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-dark-surface border border-status-danger-border dark:border-status-danger/30 shadow-card space-y-4">
+        <Card padding="md" className="border-status-danger-border/60 dark:border-status-danger/30 space-y-4">
           <div className="flex items-center space-x-2 text-status-danger">
-            <XCircle className="w-5 h-5" />
-            <h3 className="text-xs font-bold uppercase tracking-wider">What We NEVER Store</h3>
+            <XCircle className="w-4.5 h-4.5" />
+            <h3 className="text-xs font-bold uppercase tracking-wider font-mono">What We NEVER Store</h3>
           </div>
           <p className="text-xs text-content-secondary dark:text-dark-secondaryText leading-relaxed">
             No private user communications or media ever touch persistent disk storage:
           </p>
 
           <ul className="space-y-2.5 text-xs">
-            <li className="flex items-start space-x-2.5 p-2.5 rounded-lg bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border">
+            <li className="flex items-start space-x-2.5 p-3 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border">
               <EyeOff className="w-4 h-4 text-status-danger flex-shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-content-primary dark:text-dark-primary font-semibold">Zero Raw URLs or Auth Tokens</strong>
                 <span className="text-[11px] text-content-secondary dark:text-dark-secondaryText">Sensitive link tokens and full paths are discarded in memory.</span>
               </div>
             </li>
-            <li className="flex items-start space-x-2.5 p-2.5 rounded-lg bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border">
+            <li className="flex items-start space-x-2.5 p-3 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border">
               <EyeOff className="w-4 h-4 text-status-danger flex-shrink-0 mt-0.5" />
               <div>
                 <strong className="block text-content-primary dark:text-dark-primary font-semibold">Zero WhatsApp / SMS Message Texts</strong>
                 <span className="text-[11px] text-content-secondary dark:text-dark-secondaryText">Phone numbers, names, and OTPs are masked and wiped immediately.</span>
               </div>
             </li>
-            <li className="flex items-start space-x-2.5 p-2.5 rounded-lg bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border">
+            <li className="flex items-start space-x-2.5 p-3 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border">
               <EyeOff className="w-4 h-4 text-status-danger flex-shrink-0 mt-0.5" />
               <div>
-                <strong className="block text-content-primary dark:text-dark-primary font-semibold">Zero Camera Frames or Uploaded Photos</strong>
+                <strong className="block text-content-primary dark:text-dark-primary font-semibold">Zero Camera Frames or Photos</strong>
                 <span className="text-[11px] text-content-secondary dark:text-dark-secondaryText">QR images are decoded inside your local device browser.</span>
               </div>
             </li>
           </ul>
-        </div>
+        </Card>
 
       </div>
 
-      {/* Deep Dive: How Salted Hashes Work in Plain Language */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-dark-surface border border-border dark:border-dark-border shadow-card space-y-3">
+      {/* 4. Deep Dive: How Salted Hashes Work in Plain Language */}
+      <Card padding="md" className="space-y-3">
         <h3 className="text-sm font-bold text-content-primary dark:text-dark-primary flex items-center space-x-2">
           <FileCode className="w-4 h-4 text-brand-teal" />
           <span>How Salted Hashes Protect You in Simple Terms</span>
@@ -141,18 +236,18 @@ export default function PrivacyCenterPage() {
           A standard hash function can sometimes be reversed if an attacker pre-computes billions of common web addresses (called a "rainbow table"). To make this impossible, QR Shield uses a secret <strong>server-side salt key</strong>. Even if someone breached our database, it is mathematically impossible to turn the hash back into your link, phone number, or text message.
         </p>
 
-        <div className="p-3.5 rounded-lg bg-canvas-subtle dark:bg-dark-secondary font-mono text-[11px] text-content-secondary dark:text-dark-secondaryText space-y-1 border border-border dark:border-dark-border">
+        <div className="p-3.5 rounded-xl bg-canvas-subtle dark:bg-dark-secondary font-mono text-[11px] text-content-secondary dark:text-dark-secondaryText space-y-1 border border-border dark:border-dark-border">
           <p className="text-brand-teal font-semibold">// Cryptographic transformation before storage:</p>
           <p className="text-content-primary dark:text-dark-primary">stored_hash = HMAC_SHA256(raw_input, server_secret_salt)</p>
           <p className="text-status-success font-semibold">// Raw input is wiped from system memory immediately</p>
         </div>
-      </div>
+      </Card>
 
-      {/* Danger Zone: Delete My Data (Right to Erasure) */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-dark-surface border border-status-danger-border dark:border-status-danger/30 shadow-card space-y-3">
+      {/* 5. Danger Zone: Delete My Data (Right to Erasure) */}
+      <Card padding="md" className="border-status-danger-border/60 dark:border-status-danger/30 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-status-danger flex items-center space-x-1.5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-status-danger flex items-center space-x-1.5 font-mono">
               <Trash2 className="w-4 h-4" />
               <span>Right to Erasure (GDPR / CCPA Compliant)</span>
             </h3>
@@ -162,64 +257,62 @@ export default function PrivacyCenterPage() {
           </div>
 
           {isAuthenticated ? (
-            <button
-              type="button"
+            <Button
+              size="sm"
+              variant="danger"
+              icon={Trash2}
               onClick={() => setShowConfirmModal(true)}
-              className="px-4 py-2 rounded-lg bg-status-danger-bg hover:bg-status-danger text-status-danger hover:text-white border border-status-danger-border text-xs font-semibold transition-colors flex items-center space-x-1.5 self-start sm:self-auto"
             >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Delete My Data</span>
-            </button>
+              Delete My Data
+            </Button>
           ) : (
             <span className="text-xs text-content-muted dark:text-dark-muted font-mono italic">
               Guest scans are not attached to any account profile.
             </span>
           )}
         </div>
-      </div>
+      </Card>
 
       {/* Confirmation Modal */}
-      {showConfirmModal && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="modal-title"
-        >
-          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-dark-surface border border-status-danger-border p-6 space-y-4 shadow-modal">
-            <div className="w-10 h-10 rounded-xl bg-status-danger-bg text-status-danger flex items-center justify-center mx-auto">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
+      <Modal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        title="Confirm Permanent Data Erasure"
+        description="This action cannot be undone. All your scan history, telemetry hashes, and account credentials will be permanently erased."
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-4">
+          <div className="p-3 rounded-xl bg-status-danger-bg border border-status-danger-border text-status-danger text-xs space-y-1">
+            <p className="font-semibold flex items-center space-x-1">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              <span>Permanent Deletion Notice</span>
+            </p>
+            <p className="text-[11px] leading-relaxed">
+              Upon confirmation, our backend executes a cascading delete purging your user ID, audit logs, and salt telemetry from Supabase.
+            </p>
+          </div>
 
-            <div className="text-center space-y-1.5">
-              <h3 id="modal-title" className="text-base font-bold text-content-primary dark:text-dark-primary">
-                Confirm Permanent Data Erasure
-              </h3>
-              <p className="text-xs text-content-secondary dark:text-dark-secondaryText leading-relaxed">
-                This action cannot be undone. All your scan history, telemetry hashes, and account credentials will be permanently erased from Supabase.
-              </p>
-            </div>
-
-            <div className="flex items-center space-x-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowConfirmModal(false)}
-                className="flex-1 py-2 rounded-lg bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border text-xs font-semibold text-content-primary dark:text-dark-primary"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={deleting}
-                className="flex-1 py-2 rounded-lg bg-status-danger hover:opacity-90 text-white text-xs font-semibold shadow-subtle transition-opacity disabled:opacity-50"
-              >
-                {deleting ? 'Erasing...' : 'Confirm Delete'}
-              </button>
-            </div>
+          <div className="flex items-center space-x-3 pt-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1"
+              onClick={() => setShowConfirmModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              variant="dangerSolid"
+              className="flex-1"
+              loading={deleting}
+              onClick={handleDelete}
+            >
+              Confirm Delete
+            </Button>
           </div>
         </div>
-      )}
+      </Modal>
 
     </div>
   );

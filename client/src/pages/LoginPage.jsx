@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Shield, Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import Button from '../components/common/Button';
+import Badge from '../components/common/Badge';
+import Card from '../components/common/Card';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -22,29 +25,32 @@ export default function LoginPage() {
       await login(email, password);
       navigate('/dashboard');
     } catch (err) {
-      setErrorMsg(err.response?.data?.error || 'Failed to sign in. Please check your credentials.');
+      setErrorMsg(err.response?.data?.error || 'Failed to sign in. Please verify your credentials.');
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 rounded-2xl bg-white dark:bg-dark-surface border border-border dark:border-dark-border shadow-card overflow-hidden">
+    <div className="min-h-[calc(100vh-10rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 select-none">
+      <Card padding="none" className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 shadow-elevated">
         
         {/* Left: Clean Login Form */}
         <div className="p-8 sm:p-10 space-y-6 flex flex-col justify-center">
           <div>
+            <div className="flex items-center space-x-2 mb-2">
+              <Badge variant="teal" size="xs">SECURE SESSION</Badge>
+            </div>
             <h2 className="text-xl sm:text-2xl font-bold text-content-primary dark:text-dark-primary tracking-tight">
               Sign In to QR Shield
             </h2>
             <p className="text-xs text-content-secondary dark:text-dark-secondaryText mt-1">
-              Access your personal zero-knowledge security dashboard.
+              Access your personalized zero-knowledge telemetry dashboard.
             </p>
           </div>
 
           {errorMsg && (
-            <div className="p-3.5 rounded-lg bg-status-danger-bg border border-status-danger-border text-status-danger text-xs flex items-center space-x-2">
+            <div className="p-3.5 rounded-xl bg-status-danger-bg border border-status-danger-border text-status-danger text-xs flex items-center space-x-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{errorMsg}</span>
             </div>
@@ -54,7 +60,7 @@ export default function LoginPage() {
             {/* Email Field */}
             <div className="space-y-1.5">
               <label className="font-semibold text-content-primary dark:text-dark-primary">
-                Email Address
+                Work Email Address
               </label>
               <div className="relative flex items-center">
                 <input
@@ -62,8 +68,8 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@company.com"
-                  className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border text-content-primary dark:text-dark-primary placeholder:text-content-muted focus:outline-none focus:border-brand-teal transition-colors"
+                  placeholder="analyst@enterprise.com"
+                  className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border text-content-primary dark:text-dark-primary placeholder:text-content-muted focus:outline-none focus:border-brand-teal transition-colors"
                 />
                 <Mail className="w-4 h-4 text-content-muted absolute left-3 pointer-events-none" />
               </div>
@@ -81,7 +87,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full pl-9 pr-10 py-2.5 rounded-lg bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border text-content-primary dark:text-dark-primary placeholder:text-content-muted focus:outline-none focus:border-brand-teal transition-colors"
+                  className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border text-content-primary dark:text-dark-primary placeholder:text-content-muted focus:outline-none focus:border-brand-teal transition-colors"
                 />
                 <Lock className="w-4 h-4 text-content-muted absolute left-3 pointer-events-none" />
                 <button
@@ -95,19 +101,21 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <button
+            <Button
               type="submit"
-              disabled={submitting}
-              className="w-full py-2.5 rounded-lg bg-brand-teal hover:bg-brand-teal-hover text-white font-semibold text-xs shadow-subtle transition-colors flex items-center justify-center space-x-1.5 disabled:opacity-50"
+              variant="primary"
+              size="md"
+              loading={submitting}
+              icon={ArrowRight}
+              iconPosition="right"
+              className="w-full"
             >
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              <span>{submitting ? 'Signing in...' : 'Sign In'}</span>
-              {!submitting && <ArrowRight className="w-4 h-4" />}
-            </button>
+              Sign In to Workspace
+            </Button>
           </form>
 
           <p className="text-center text-xs text-content-secondary dark:text-dark-secondaryText">
-            Don't have an account yet?{' '}
+            Need an account?{' '}
             <Link to="/register" className="text-brand-teal font-semibold hover:underline">
               Create an account free
             </Link>
@@ -117,11 +125,11 @@ export default function LoginPage() {
         {/* Right: Security Trust Panel */}
         <div className="hidden md:flex flex-col justify-between p-10 bg-canvas-subtle dark:bg-dark-secondary border-l border-border dark:border-dark-border">
           <div className="space-y-5">
-            <div className="w-10 h-10 rounded-lg bg-brand-teal text-white flex items-center justify-center shadow-subtle">
-              <Shield className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-lg bg-brand-teal text-white flex items-center justify-center shadow-subtle">
+              <Shield className="w-4.5 h-4.5" />
             </div>
 
-            <h3 className="text-lg font-bold text-content-primary dark:text-dark-primary leading-snug">
+            <h3 className="text-base font-bold text-content-primary dark:text-dark-primary leading-snug">
               Enterprise Zero-Knowledge Architecture
             </h3>
 
@@ -150,7 +158,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-      </div>
+      </Card>
     </div>
   );
 }

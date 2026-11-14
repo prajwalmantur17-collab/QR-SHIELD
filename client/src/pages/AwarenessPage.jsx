@@ -12,8 +12,16 @@ import {
   ChevronUp,
   Search,
   Shield,
-  Lightbulb
+  Lightbulb,
+  Check,
+  X,
+  Sparkles,
+  HelpCircle
 } from 'lucide-react';
+import Card from '../components/common/Card';
+import Badge from '../components/common/Badge';
+import Button from '../components/common/Button';
+import Tabs from '../components/common/Tabs';
 
 export const SCAM_GUIDES = [
   {
@@ -21,7 +29,7 @@ export const SCAM_GUIDES = [
     title: 'Disguised UPI "Collect" QR Codes',
     category: 'Payment Scams',
     icon: DollarSign,
-    iconColor: 'text-status-warning bg-status-warning-bg',
+    badgeVariant: 'warning',
     summary: 'Scammers send a QR code claiming "Scan to receive payment or cashback". The QR code is secretly an authorized collect/debit request.',
     howItWorks: 'In the UPI protocol, entering your MPIN is ONLY used to AUTHORIZE MONEY LEAVING YOUR ACCOUNT. You never need to enter a PIN to receive funds from anyone.',
     signs: [
@@ -42,7 +50,7 @@ export const SCAM_GUIDES = [
     title: 'Urgent Bank / KYC Suspension SMS',
     category: 'Phishing & KYC',
     icon: MessageSquare,
-    iconColor: 'text-status-danger bg-status-danger-bg',
+    badgeVariant: 'danger',
     summary: 'Urgent messages pretending your bank account, PAN, or SIM card will be deactivated within 24 hours unless you click an embedded link.',
     howItWorks: 'The link opens a fake web form mimicking net banking login forms, prompting you for your username, password, card CVV, and incoming OTP to empty your account.',
     signs: [
@@ -63,7 +71,7 @@ export const SCAM_GUIDES = [
     title: 'Physical Sticker Tampering (Quishing)',
     category: 'Physical Quishing',
     icon: QrCode,
-    iconColor: 'text-brand-teal bg-brand-teal-subtle',
+    badgeVariant: 'teal',
     summary: 'Fraudsters stick counterfeit QR code stickers over legitimate parking meters, restaurant menus, and monument ticket kiosks.',
     howItWorks: 'You scan the sticker expecting to pay a parking fee or view a menu, but the fake QR redirects to an imitation page capturing credit card credentials.',
     signs: [
@@ -84,7 +92,7 @@ export const SCAM_GUIDES = [
     title: 'Telegram "YouTube Video Like" Job Scam',
     category: 'Job Scams',
     icon: Briefcase,
-    iconColor: 'text-brand-blue bg-brand-blue-subtle',
+    badgeVariant: 'blue',
     summary: 'WhatsApp message offering ₹3,000 to ₹10,000/day for trivial tasks like liking YouTube videos or rating Google Maps locations.',
     howItWorks: 'They pay ₹150 for the first few tasks to gain your confidence, then move you to a Telegram group where you must "invest" money to unlock higher tiered payouts.',
     signs: [
@@ -105,7 +113,7 @@ export const SCAM_GUIDES = [
     title: 'AnyDesk / Screen Share Customer Care Trap',
     category: 'Remote Access',
     icon: Laptop,
-    iconColor: 'text-status-danger bg-status-danger-bg',
+    badgeVariant: 'danger',
     summary: 'Scammer poses as utility support or bank executive and convinces you to install AnyDesk, TeamViewer, or QuickSupport to "fix your issue".',
     howItWorks: 'Once installed, they instruct you to read out the 9-digit remote code, granting them full view and control of your phone screen while you open bank apps.',
     signs: [
@@ -128,6 +136,9 @@ export default function AwarenessPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
 
+  // Interactive Quiz State
+  const [quizAnswer, setQuizAnswer] = useState(null);
+
   const categories = ['All', 'Payment Scams', 'Phishing & KYC', 'Physical Quishing', 'Job Scams', 'Remote Access'];
 
   const filteredGuides = useMemo(() => {
@@ -146,32 +157,94 @@ export default function AwarenessPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
+    <div className="max-w-4xl mx-auto space-y-8 select-none">
       
-      {/* Header */}
-      <div className="text-center space-y-2 max-w-2xl mx-auto">
-        <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold text-brand-teal bg-brand-teal-subtle border border-brand-teal/20">
-          <BookOpen className="w-3.5 h-3.5" />
-          <span>Scam Awareness & Prevention Guide</span>
+      {/* 1. Header with Guide Badge */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border dark:border-dark-border">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-extrabold text-content-primary dark:text-dark-primary tracking-tight">
+            Scam Awareness & Threat Encyclopedia
+          </h1>
+          <p className="text-xs text-content-secondary dark:text-dark-secondaryText mt-0.5">
+            Practical defense guides and tactical patterns to recognize quishing, UPI fraud, and coercion.
+          </p>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-content-primary dark:text-dark-primary tracking-tight">
-          How to Spot Common Cyber Scams
-        </h1>
-        <p className="text-xs sm:text-sm text-content-secondary dark:text-dark-secondaryText">
-          Learn how attackers trick users through fake QR stickers, disguised UPI payments, and urgent text alerts.
-        </p>
+
+        <Badge variant="teal" size="sm" dot>
+          {SCAM_GUIDES.length} Verified Modules
+        </Badge>
       </div>
 
-      {/* Search & Category Filter Controls */}
+      {/* 2. Interactive "Can You Spot The Threat?" Micro-Challenge */}
+      <Card padding="md" className="space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-border dark:border-dark-border">
+          <div className="flex items-center space-x-2">
+            <HelpCircle className="w-4 h-4 text-brand-teal" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-content-primary dark:text-dark-primary font-mono">
+              Quick Readiness Challenge: Spot The Deception
+            </h3>
+          </div>
+          <Badge variant="neutral" size="xs">Scenario 1</Badge>
+        </div>
+
+        <div className="p-3.5 rounded-xl bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border space-y-2">
+          <p className="text-xs text-content-primary dark:text-dark-primary font-semibold">
+            "A buyer on OLX sends you a QR code and says: 'Scan this QR in Google Pay and enter your 4-digit UPI PIN to receive the ₹2,500 advance.' What should you do?"
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => setQuizAnswer('wrong')}
+              className={`p-2.5 rounded-lg text-left text-xs border font-medium transition-colors ${
+                quizAnswer === 'wrong'
+                  ? 'bg-status-danger-bg text-status-danger border-status-danger-border font-bold'
+                  : 'bg-white dark:bg-dark-surface border-border hover:bg-canvas-subtle'
+              }`}
+            >
+              A. Scan it and enter PIN to accept funds
+            </button>
+            <button
+              type="button"
+              onClick={() => setQuizAnswer('correct')}
+              className={`p-2.5 rounded-lg text-left text-xs border font-medium transition-colors ${
+                quizAnswer === 'correct'
+                  ? 'bg-status-success-bg text-status-success border-status-success-border font-bold'
+                  : 'bg-white dark:bg-dark-surface border-border hover:bg-canvas-subtle'
+              }`}
+            >
+              B. Decline immediately — PIN is NEVER required to receive money
+            </button>
+          </div>
+        </div>
+
+        {quizAnswer && (
+          <div className={`p-3 rounded-xl border text-xs flex items-start space-x-2.5 ${
+            quizAnswer === 'correct'
+              ? 'bg-status-success-bg border-status-success-border text-status-success'
+              : 'bg-status-danger-bg border-status-danger-border text-status-danger'
+          }`}>
+            {quizAnswer === 'correct' ? <Check className="w-4 h-4 mt-0.5 flex-shrink-0" /> : <X className="w-4 h-4 mt-0.5 flex-shrink-0" />}
+            <div>
+              <p className="font-bold">
+                {quizAnswer === 'correct' ? 'Correct! Golden Rule Confirmed.' : 'Incorrect! You would lose ₹2,500.'}
+              </p>
+              <p className="text-[11px] mt-0.5">
+                In the UPI architecture, entering your PIN only authorizes a debit. Scammers disguise payment requests as refunds to drain victims.
+              </p>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {/* 3. Search Bar & Category Filter Pills */}
       <div className="space-y-3">
-        {/* Search Bar */}
         <div className="relative flex items-center">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search scams, tactics, or keywords (e.g., UPI, KYC, parking, AnyDesk)..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-dark-surface border border-border dark:border-dark-border text-xs sm:text-sm text-content-primary dark:text-dark-primary placeholder:text-content-muted focus:outline-none focus:border-brand-teal shadow-card transition-colors"
+            placeholder="Search threat categories, indicators, or tactics (e.g. UPI, KYC, parking, AnyDesk)..."
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-dark-surface border border-border dark:border-dark-border text-xs sm:text-sm text-content-primary dark:text-dark-primary placeholder:text-content-muted focus:outline-none focus:border-brand-teal shadow-subtle transition-colors"
           />
           <Search className="w-4 h-4 text-content-muted absolute left-3.5 pointer-events-none" />
         </div>
@@ -183,7 +256,7 @@ export default function AwarenessPage() {
               key={cat}
               type="button"
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                 selectedCategory === cat
                   ? 'bg-brand-teal text-white shadow-subtle'
                   : 'bg-white dark:bg-dark-surface border border-border dark:border-dark-border text-content-secondary dark:text-dark-secondaryText hover:text-content-primary'
@@ -195,7 +268,7 @@ export default function AwarenessPage() {
         </div>
       </div>
 
-      {/* Scam Cards Accordion List */}
+      {/* 4. Scam Guides Accordion List */}
       <div className="space-y-4">
         {filteredGuides.length > 0 ? (
           filteredGuides.map((guide) => {
@@ -203,9 +276,10 @@ export default function AwarenessPage() {
             const isExpanded = expandedCard === guide.id;
 
             return (
-              <div
+              <Card
                 key={guide.id}
-                className="rounded-2xl border border-border dark:border-dark-border bg-white dark:bg-dark-surface shadow-card overflow-hidden transition-colors"
+                padding="none"
+                className="overflow-hidden transition-colors"
               >
                 <button
                   type="button"
@@ -214,14 +288,16 @@ export default function AwarenessPage() {
                   aria-expanded={isExpanded}
                 >
                   <div className="flex items-start space-x-3.5">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${guide.iconColor}`}>
+                    <div className="w-9 h-9 rounded-xl bg-canvas-subtle dark:bg-dark-secondary text-brand-teal flex items-center justify-center flex-shrink-0">
                       <Icon className="w-5 h-5" />
                     </div>
                     <div className="space-y-1">
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-content-muted dark:text-dark-muted font-bold">
-                        {guide.category}
-                      </span>
-                      <h3 className="text-sm sm:text-base font-bold text-content-primary dark:text-dark-primary">
+                      <div className="flex items-center space-x-2">
+                        <Badge variant={guide.badgeVariant} size="xs">
+                          {guide.category}
+                        </Badge>
+                      </div>
+                      <h3 className="text-sm sm:text-base font-bold text-content-primary dark:text-dark-primary tracking-tight">
                         {guide.title}
                       </h3>
                       <p className="text-xs text-content-secondary dark:text-dark-secondaryText leading-relaxed">
@@ -241,63 +317,65 @@ export default function AwarenessPage() {
                     
                     {/* How It Works */}
                     <div className="space-y-1">
-                      <h4 className="font-bold uppercase tracking-wider text-content-primary dark:text-dark-primary text-[11px]">
-                        How This Scam Works:
+                      <h4 className="text-[11px] font-bold uppercase tracking-wider text-content-muted dark:text-dark-muted font-mono">
+                        Mechanics of Deception
                       </h4>
-                      <p className="text-content-secondary dark:text-dark-secondaryText leading-relaxed">
+                      <p className="text-content-primary dark:text-dark-primary leading-relaxed">
                         {guide.howItWorks}
                       </p>
                     </div>
 
-                    {/* Warning Signs */}
+                    {/* Red Flags */}
                     <div className="space-y-2">
-                      <h4 className="font-bold uppercase tracking-wider text-status-danger text-[11px]">
-                        Warning Signs to Look For:
+                      <h4 className="text-[11px] font-bold uppercase tracking-wider text-status-danger font-mono flex items-center space-x-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        <span>Key Red Flags</span>
                       </h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <ul className="space-y-1.5 pl-1">
                         {guide.signs.map((sign, idx) => (
-                          <div key={idx} className="p-2.5 rounded-lg bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border flex items-start space-x-2">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-status-danger flex-shrink-0 mt-0.5" />
-                            <span className="text-content-primary dark:text-dark-primary leading-tight text-[11px]">{sign}</span>
-                          </div>
+                          <li key={idx} className="flex items-start space-x-2 text-content-secondary dark:text-dark-secondaryText">
+                            <span className="w-1.5 h-1.5 rounded-full bg-status-danger mt-1.5 flex-shrink-0" />
+                            <span>{sign}</span>
+                          </li>
                         ))}
-                      </div>
+                      </ul>
                     </div>
 
                     {/* Prevention Steps */}
                     <div className="space-y-2">
-                      <h4 className="font-bold uppercase tracking-wider text-brand-teal text-[11px]">
-                        How to Protect Yourself:
+                      <h4 className="text-[11px] font-bold uppercase tracking-wider text-status-success font-mono flex items-center space-x-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Tactical Defense Checklist</span>
                       </h4>
-                      <ul className="space-y-1.5 text-content-secondary dark:text-dark-secondaryText">
+                      <ul className="space-y-1.5 pl-1">
                         {guide.preventionSteps.map((step, idx) => (
-                          <li key={idx} className="flex items-start space-x-2">
-                            <span className="w-4 h-4 rounded-full bg-brand-teal-subtle text-brand-teal text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
-                              {idx + 1}
-                            </span>
-                            <span className="text-[11px] leading-relaxed">{step}</span>
+                          <li key={idx} className="flex items-start space-x-2 text-content-secondary dark:text-dark-secondaryText">
+                            <span className="w-1.5 h-1.5 rounded-full bg-status-success mt-1.5 flex-shrink-0" />
+                            <span>{step}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
 
                     {/* Golden Rule Callout */}
-                    <div className="p-3.5 rounded-xl bg-status-warning-bg border border-status-warning-border text-status-warning-text font-medium flex items-center space-x-2.5">
-                      <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                      <span className="text-xs leading-relaxed">{guide.ruleOfThumb}</span>
+                    <div className="p-3.5 rounded-xl bg-brand-teal-subtle text-brand-teal-text border border-brand-teal/20 space-y-1">
+                      <span className="font-bold text-[10px] uppercase font-mono tracking-wider flex items-center space-x-1">
+                        <Lightbulb className="w-3.5 h-3.5 text-brand-teal" />
+                        <span>Definitive Rule of Thumb</span>
+                      </span>
+                      <p className="text-xs font-semibold leading-relaxed">
+                        {guide.ruleOfThumb}
+                      </p>
                     </div>
 
                   </div>
                 )}
-              </div>
+              </Card>
             );
           })
         ) : (
-          <div className="p-8 text-center bg-white dark:bg-dark-surface rounded-2xl border border-border dark:border-dark-border space-y-2 shadow-card">
-            <p className="text-xs font-semibold text-content-primary dark:text-dark-primary">No matching guides found</p>
-            <p className="text-[11px] text-content-secondary dark:text-dark-secondaryText">
-              Try searching with different terms like "UPI", "Bank", or "QR".
-            </p>
+          <div className="p-8 text-center text-xs text-content-secondary">
+            No threat guides found matching your query.
           </div>
         )}
       </div>
