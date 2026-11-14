@@ -1,6 +1,7 @@
 {
   "name": "qrshield-server",
   "version": "1.0.0",
+  "license": "MIT",
   "description": "QR Shield backend detection engine, auth, and privacy-preserving scanner",
   "main": "src/index.js",
   "type": "module",

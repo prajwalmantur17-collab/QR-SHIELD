@@ -1,6 +1,7 @@
 {
   "name": "qr-shield-root",
   "version": "1.0.0",
+  "license": "MIT",
   "description": "QR Shield - AI Security, Privacy & Trust Platform",
   "private": true,
   "scripts": {
