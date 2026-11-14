@@ -27,6 +27,21 @@ export const ANNOUNCEMENT_TEXTS = {
   }
 };
 
+function base64ToBlobUrl(base64, mimeType = 'audio/mpeg') {
+  try {
+    const binStr = atob(base64);
+    const len = binStr.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binStr.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: mimeType });
+    return URL.createObjectURL(blob);
+  } catch (e) {
+    return `data:${mimeType};base64,${base64}`;
+  }
+}
+
 class VoiceAssistantService {
   constructor() {
     this.language = localStorage.getItem('qrshield_voice_lang') || 'en';
@@ -227,7 +242,7 @@ class VoiceAssistantService {
         });
 
         if (res.data?.audioBase64) {
-          audioUrl = `data:audio/mpeg;base64,${res.data.audioBase64}`;
+          audioUrl = base64ToBlobUrl(res.data.audioBase64, res.data.mimeType || 'audio/mpeg');
           this.audioCache.set(cacheKey, audioUrl);
         } else if (res.data?.fallback) {
           // ElevenLabs unavailable or not configured: trigger Web Speech API fallback
@@ -253,6 +268,12 @@ class VoiceAssistantService {
         this.audioElement = new Audio();
       }
 
+      // Stop any existing playback and reset playhead
+      try {
+        this.audioElement.pause();
+        this.audioElement.currentTime = 0;
+      } catch (_) {}
+
       this.audioElement.src = src;
       this.audioElement.volume = this.volume;
       this.audioElement.muted = this.muted;
@@ -272,12 +293,18 @@ class VoiceAssistantService {
         this.speakBrowserSpeech(this.currentText, this.language);
       };
 
+      this.audioElement.load();
       const playPromise = this.audioElement.play();
       if (playPromise !== undefined) {
-        playPromise.catch(e => {
-          console.warn('[Voice Assistant] Playback blocked by browser autoplay policy:', e);
-          this.speakBrowserSpeech(this.currentText, this.language);
-        });
+        playPromise
+          .then(() => {
+            this.state = 'speaking';
+            this.notify();
+          })
+          .catch((e) => {
+            console.warn('[Voice Assistant] Playback blocked by browser autoplay policy, attempting speech synthesis:', e);
+            this.speakBrowserSpeech(this.currentText, this.language);
+          });
       }
     } catch (err) {
       this.speakBrowserSpeech(this.currentText, this.language);
@@ -358,7 +385,7 @@ class VoiceAssistantService {
         try {
           const res = await api.post('/voice/announce', { language: lang, resultType: type });
           if (res.data?.audioBase64) {
-            this.audioCache.set(cacheKey, `data:audio/mpeg;base64,${res.data.audioBase64}`);
+            this.audioCache.set(cacheKey, base64ToBlobUrl(res.data.audioBase64, res.data.mimeType || 'audio/mpeg'));
           }
         } catch (_) {}
       }

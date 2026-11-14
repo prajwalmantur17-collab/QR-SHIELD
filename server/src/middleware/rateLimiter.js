@@ -23,13 +23,29 @@ export const reportLimiter = rateLimit({
   legacyHeaders: false
 });
 
-// Scan limiter: 5 scans / day for guests, 60 / hour for logged-in users
+// Dedicated Voice announcement limiter: generous 120 per 15 mins (mostly cached in memory anyway)
+export const voiceLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 120,
+  keyGenerator: (req) => (req.user && req.user.id ? `voice_user_${req.user.id}` : `voice_${req.ip || 'guest'}`),
+  message: {
+    error: 'Voice announcement rate limit reached. Please try again in a few minutes.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// Scan limiter: 5 scans / day for guests, 60 / hour for logged-in users (generous in development)
 export const scanLimiter = rateLimit({
   windowMs: 24 * 60 * 60 * 1000, // 24 hours
   max: (req) => {
     // If authenticated user, grant 60 per hour (or up to 1440/day)
     if (req.user) {
       return 1440;
+    }
+    // In local development, allow generous quota so testing is never blocked
+    if (process.env.NODE_ENV === 'development') {
+      return 500;
     }
     // Guest limit: 5 scans per day
     return 5;

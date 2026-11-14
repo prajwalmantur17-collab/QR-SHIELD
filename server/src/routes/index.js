@@ -6,7 +6,7 @@ import { handleSafePreview } from '../controllers/previewController.js';
 import { getStats, getHistory } from '../controllers/statsController.js';
 import { announceVoice } from '../controllers/voiceController.js';
 import { authenticate, optionalAuth } from '../middleware/auth.js';
-import { authLimiter, scanLimiter, reportLimiter } from '../middleware/rateLimiter.js';
+import { authLimiter, scanLimiter, reportLimiter, voiceLimiter } from '../middleware/rateLimiter.js';
 
 const router = Router();
 
@@ -31,7 +31,7 @@ router.post('/scan/qr', optionalAuth, scanLimiter, scanQR);
 router.post('/scan/message', optionalAuth, scanLimiter, scanMessage);
 
 // Isolated Safe Link Preview
-router.post('/preview', optionalAuth, scanLimiter, handleSafePreview);
+router.post('/preview', optionalAuth, handleSafePreview);
 
 // Community reporting
 router.post('/report', optionalAuth, reportLimiter, reportScam);
@@ -40,7 +40,7 @@ router.post('/report', optionalAuth, reportLimiter, reportScam);
 router.get('/stats', optionalAuth, getStats);
 router.get('/history', authenticate, getHistory);
 
-// Multilingual Voice Assistant
-router.post('/voice/announce', optionalAuth, scanLimiter, announceVoice);
+// Multilingual Voice Assistant (dedicated generous limiter)
+router.post('/voice/announce', optionalAuth, voiceLimiter, announceVoice);
 
 export default router;
