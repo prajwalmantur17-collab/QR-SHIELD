@@ -3,7 +3,6 @@
   "buildCommand": "cd client && npm run build",
   "outputDirectory": "client/dist",
   "framework": "vite",
-  "cleanUrls": true,
   "headers": [
     {
       "source": "/sw.js",
@@ -13,7 +12,7 @@
       ]
     },
     {
-      "source": "/(.*).html",
+      "source": "/index.html",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
       ]
