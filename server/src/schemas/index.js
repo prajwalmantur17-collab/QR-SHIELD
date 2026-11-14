@@ -23,6 +23,10 @@ export const messageScanSchema = z.object({
   message: z.string().min(1, 'Message content cannot be empty').max(10000, 'Message too long')
 });
 
+export const previewSchema = z.object({
+  url: z.string().min(1, 'URL cannot be empty').max(2048, 'URL too long')
+});
+
 export const reportSchema = z.object({
   target: z.string().min(1, 'Target URL or domain is required'),
   reason: z.string().optional()

@@ -103,6 +103,7 @@ export async function scanLink(req, res) {
       recommended_action: verdictData.recommended_action,
       signals: verdictData.signals,
       hops: redirectInfo.hops,
+      finalUrl: redirectInfo.finalUrl,
       hopCount: redirectInfo.hopCount,
       isShortened: redirectInfo.isShortened,
       isHttps: redirectInfo.isHttps,
@@ -223,6 +224,7 @@ export async function scanQR(req, res) {
       signals: verdictData.signals,
       upiDetails,
       hops: redirectInfo ? redirectInfo.hops : undefined,
+      finalUrl: redirectInfo ? redirectInfo.finalUrl : undefined,
       hopCount: redirectInfo ? redirectInfo.hopCount : undefined
     });
   } catch (error) {

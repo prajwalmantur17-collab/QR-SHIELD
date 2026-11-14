@@ -76,6 +76,7 @@ flowchart TD
 - **🔗 SSRF-Protected Link Expander:** Recursively follows shortened redirects (bit.ly, tinyurl, etc.) up to 5 hops, blocking loopback, link-local, and private IP spaces.
 - **💬 WhatsApp / SMS Message NLP:** Unpacks messages for coercive urgency, digital arrest threats, remote-access app solicitations (AnyDesk, TeamViewer), and OTP/PIN requests.
 - **📱 PWA Share-to-Scan (`/share`):** Installable progressive web app featuring a `share_target` in the manifest. Share directly from WhatsApp or Messages into QR Shield.
+- **🌐 Safe Link Preview (Air-Gap Sandbox):** Inspects suspicious websites visually in an isolated cloud sandbox without exposing client IP, cookies, or device execution. Protected with DNS resolution anti-SSRF defenses and protocol whitelisting.
 - **🛡️ Explainable Verdict Card:** Semicircle animated risk gauge (0–100), verdict badge (`Safe` / `Suspicious` / `Dangerous`), redirect stepper, and dual-tagged signals (`[RULE]` vs `[AI]`).
 - **👥 Community Scam Blacklist:** 1-click "Report as scam" adds domain hashes to a crowdsourced blacklist, immediately raising the risk score for future scans.
 - **📊 Real-Time Analytics Dashboard:** Interactive Recharts donut charts, 7-day velocity line charts, top threat categories, and personal masked history.
@@ -198,6 +199,7 @@ All requests and responses use JSON with Zod schema validation:
 | `POST` | `/api/scan/link` | Optional Auth | Scan & expand URL safely |
 | `POST` | `/api/scan/qr` | Optional Auth | Scan QR code (UPI, link, or text) |
 | `POST` | `/api/scan/message` | Optional Auth | Scan WhatsApp / SMS message |
+| `POST` | `/api/preview` | Optional Auth | Generate isolated SSRF-protected visual preview |
 | `POST` | `/api/report` | Optional Auth | Flag malicious domain to blacklist |
 | `GET` | `/api/stats` | Optional Auth | Telemetry counts, donut data & time-series |
 | `GET` | `/api/history` | Bearer JWT | Masked scan history for user |

@@ -16,6 +16,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import RiskGauge from './RiskGauge';
+import SafeLinkPreview from './SafeLinkPreview';
 import api from '../../api/client';
 
 export default function VerdictCard({ result, onScanAnother }) {
@@ -43,6 +44,12 @@ export default function VerdictCard({ result, onScanAnother }) {
     contentHash = '',
     cached = false
   } = result;
+
+  // Determine if this result has an inspectable HTTP/HTTPS destination
+  const previewableUrl = 
+    (hops && hops.length > 0 && hops[hops.length - 1] && /^https?:\/\//i.test(hops[hops.length - 1]) ? hops[hops.length - 1] : null) ||
+    (result.finalUrl && /^https?:\/\//i.test(result.finalUrl) ? result.finalUrl : null) ||
+    (domain && domain.includes('.') ? `https://${domain}` : null);
 
   // Enterprise status theme mapping
   const verdictConfig = {
@@ -291,6 +298,16 @@ Verified with Zero-Knowledge Hashes. Scan before you trust.`;
           })}
         </div>
       </div>
+
+      {/* Safe Link Preview (Isolated Air-Gap Inspection) */}
+      {previewableUrl && (
+        <SafeLinkPreview
+          targetUrl={previewableUrl}
+          domain={domain}
+          verdict={verdict}
+          riskScore={risk_score}
+        />
+      )}
 
       {/* Action Buttons Bar */}
       <div className="pt-4 border-t border-border dark:border-dark-border flex flex-wrap items-center justify-between gap-3">

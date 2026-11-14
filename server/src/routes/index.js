@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { register, login, getMe, deleteMyData } from '../controllers/authController.js';
 import { scanLink, scanQR, scanMessage } from '../controllers/scanController.js';
 import { reportScam } from '../controllers/reportController.js';
+import { handleSafePreview } from '../controllers/previewController.js';
 import { getStats, getHistory } from '../controllers/statsController.js';
 import { authenticate, optionalAuth } from '../middleware/auth.js';
 import { authLimiter, scanLimiter } from '../middleware/rateLimiter.js';
@@ -27,6 +28,9 @@ router.delete('/me/data', authenticate, deleteMyData);
 router.post('/scan/link', optionalAuth, scanLimiter, scanLink);
 router.post('/scan/qr', optionalAuth, scanLimiter, scanQR);
 router.post('/scan/message', optionalAuth, scanLimiter, scanMessage);
+
+// Isolated Safe Link Preview
+router.post('/preview', optionalAuth, scanLimiter, handleSafePreview);
 
 // Community reporting
 router.post('/report', optionalAuth, reportScam);
