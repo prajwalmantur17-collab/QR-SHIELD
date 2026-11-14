@@ -58,8 +58,17 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`🛡️  QR Shield Security Engine listening on port ${PORT}`);
+// Catch uncaught exceptions and rejections
+process.on('uncaughtException', (err) => {
+  console.error('CRITICAL: Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('CRITICAL: Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🛡️  QR Shield Security Engine listening on 0.0.0.0:${PORT}`);
   console.log(`🔒 Privacy Engine: SHA-256 Content Hashing Active (No Raw Content Stored)`);
   console.log(`🤖 AI Engine: Google Gemini API ready (fallback: deterministic rule engine)`);
 });
