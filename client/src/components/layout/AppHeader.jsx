@@ -26,6 +26,7 @@ export default function AppHeader({ onOpenMobile, onToggleCollapse, isCollapsed 
   // Route title & breadcrumb mapping
   const routeMeta = {
     '/scan': { section: 'Detection', title: 'Threat Scanner' },
+    '/media': { section: 'Detection & Analysis', title: 'Media Authenticity & Risk' },
     '/dashboard': { section: 'Intelligence', title: 'Security Dashboard' },
     '/awareness': { section: 'Education', title: 'Scam Awareness' },
     '/privacy': { section: 'Governance', title: 'Privacy Center' },

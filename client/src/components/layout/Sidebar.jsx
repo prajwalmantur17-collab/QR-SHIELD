@@ -21,6 +21,7 @@ import {
   Sparkles,
   Search,
   Eye,
+  Sliders,
   PanelLeftClose,
   PanelLeftOpen
 } from 'lucide-react';
@@ -43,6 +44,14 @@ export default function Sidebar({ isCollapsed, onToggleCollapse, isMobileOpen, o
           path: '/scan',
           icon: QrCode,
           badge: 'Live',
+          badgeVariant: 'teal'
+        },
+        {
+          id: 'media',
+          name: 'Media Authenticity',
+          path: '/media',
+          icon: Sliders,
+          badge: 'Local',
           badgeVariant: 'teal'
         },
         {

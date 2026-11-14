@@ -9,6 +9,7 @@ import ShareTargetPage from './pages/ShareTargetPage';
 import DashboardPage from './pages/DashboardPage';
 import PrivacyCenterPage from './pages/PrivacyCenterPage';
 import AwarenessPage from './pages/AwarenessPage';
+import MediaAnalyzerPage from './pages/MediaAnalyzerPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 
@@ -93,6 +94,14 @@ export default function App() {
         element={
           <AppLayout>
             <ShareTargetPage />
+          </AppLayout>
+        }
+      />
+      <Route
+        path="/media"
+        element={
+          <AppLayout>
+            <MediaAnalyzerPage />
           </AppLayout>
         }
       />
