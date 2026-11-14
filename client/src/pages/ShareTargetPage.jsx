@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Loader2, AlertCircle, Share2 } from 'lucide-react';
+import { Loader2, AlertCircle, Share2, ArrowRight } from 'lucide-react';
 import api from '../api/client';
 import VerdictCard from '../components/scan/VerdictCard';
 import ScanProgress from '../components/scan/ScanProgress';
@@ -30,7 +30,6 @@ export default function ShareTargetPage() {
       setIsScanning(true);
       setErrorMsg(null);
 
-      // Auto-detect: if explicit URL or starts with http
       const isUrl = url || /^https?:\/\//i.test(payload) || /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/i.test(payload);
 
       try {
@@ -53,26 +52,27 @@ export default function ShareTargetPage() {
   }, [searchParams]);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
-      <div className="flex items-center space-x-2 text-xs font-mono text-brand-cyan uppercase tracking-wider">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+      <div className="flex items-center space-x-2 text-xs font-mono text-brand-teal uppercase tracking-wider font-semibold">
         <Share2 className="w-4 h-4" />
-        <span>PWA Web Share Target Receiver</span>
+        <span>PWA Web Share Target Analysis</span>
       </div>
 
       {isScanning && (
-        <div className="p-8 rounded-2xl bg-dark-surface border border-dark-border">
+        <div className="p-8 rounded-2xl bg-white dark:bg-dark-surface border border-border dark:border-dark-border shadow-card">
           <ScanProgress inputType="link" />
         </div>
       )}
 
       {errorMsg && (
-        <div className="p-6 rounded-2xl bg-dark-surface border border-rose-500/30 text-center space-y-4">
-          <AlertCircle className="w-10 h-10 text-rose-400 mx-auto" />
-          <h3 className="text-base font-bold text-dark-text">Unable to Process Share</h3>
-          <p className="text-xs text-dark-muted">{errorMsg}</p>
+        <div className="p-6 rounded-2xl bg-white dark:bg-dark-surface border border-status-danger-border text-center space-y-3 shadow-card">
+          <AlertCircle className="w-8 h-8 text-status-danger mx-auto" />
+          <h3 className="text-sm font-bold text-content-primary dark:text-dark-primary">Unable to Process Shared Item</h3>
+          <p className="text-xs text-content-secondary dark:text-dark-secondaryText max-w-sm mx-auto">{errorMsg}</p>
           <button
+            type="button"
             onClick={() => navigate('/scan')}
-            className="px-6 py-2.5 rounded-xl bg-brand-indigo text-white text-xs font-bold shadow-glow"
+            className="px-4 py-2 rounded-lg bg-brand-teal hover:bg-brand-teal-hover text-white text-xs font-semibold shadow-subtle transition-colors"
           >
             Go to Scanner
           </button>

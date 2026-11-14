@@ -6,7 +6,7 @@ export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('qrshield_theme');
     if (saved) return saved;
-    return 'dark'; // Dark-first
+    return 'light'; // Default to light mode (Premium SaaS)
   });
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export function ThemeProvider({ children }) {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
 
   return (

@@ -13,7 +13,7 @@ import RegisterPage from './pages/RegisterPage';
 
 export default function App() {
   return (
-    <div className="flex flex-col min-h-screen bg-dark-bg text-dark-text">
+    <div className="flex flex-col min-h-screen bg-canvas dark:bg-dark-bg text-content-primary dark:text-dark-primary transition-colors duration-150">
       <Navbar />
       <main className="flex-1">
         <Routes>

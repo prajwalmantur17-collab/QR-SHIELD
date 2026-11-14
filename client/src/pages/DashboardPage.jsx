@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom';
 import { 
   ShieldCheck, 
   ShieldAlert, 
+  AlertTriangle, 
   Activity, 
-  Layers, 
-  Calendar, 
-  Filter, 
-  ArrowUpRight, 
+  Lock, 
   Clock, 
-  Lock,
+  Search,
+  Filter,
+  ArrowRight,
   Radar
 } from 'lucide-react';
 import { 
@@ -58,197 +58,213 @@ export default function DashboardPage() {
     return scan.verdict === verdictFilter;
   });
 
+  const chartColors = {
+    Safe: '#23845D',
+    Suspicious: '#C58A32',
+    Dangerous: '#D45B61'
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
       
-      {/* Page Title & Status */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-dark-border/60">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border dark:border-dark-border">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-dark-text tracking-tight flex items-center space-x-2.5">
-            <span>Live Security Telemetry</span>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-content-primary dark:text-dark-primary tracking-tight">
+            Security Telemetry & Analytics
           </h1>
-          <p className="text-xs text-dark-muted mt-1">
-            Real-time threat monitoring and zero-knowledge scan audit records.
+          <p className="text-xs text-content-secondary dark:text-dark-secondaryText mt-1">
+            Real-time threat detection metrics and zero-knowledge scan audit records.
           </p>
         </div>
 
         {!isAuthenticated ? (
-          <div className="flex items-center space-x-3 bg-brand-indigo/10 border border-brand-indigo/30 p-2.5 rounded-xl text-xs">
-            <span className="text-brand-cyan font-medium">Viewing real-time database stats. Log in to track your personal scans.</span>
+          <div className="flex items-center space-x-3 bg-brand-teal-subtle dark:bg-dark-secondary border border-brand-teal/20 px-3 py-2 rounded-xl text-xs">
+            <span className="text-brand-teal-text dark:text-brand-teal font-medium">
+              Viewing platform stats. Sign in to track your personal scan history.
+            </span>
             <Link
               to="/login"
-              className="px-3 py-1.5 rounded-lg bg-brand-indigo text-white font-bold hover:opacity-95 transition-opacity"
+              className="px-3 py-1.5 rounded-lg bg-brand-teal hover:bg-brand-teal-hover text-white font-semibold transition-colors shadow-subtle"
             >
               Sign In
             </Link>
           </div>
         ) : (
-          <div className="flex items-center space-x-2 text-xs font-mono text-dark-muted">
+          <div className="flex items-center space-x-2 text-xs text-content-secondary dark:text-dark-secondaryText bg-white dark:bg-dark-surface border border-border dark:border-dark-border px-3 py-1.5 rounded-lg">
             <span>Signed in:</span>
-            <span className="text-brand-cyan font-bold">{user?.email}</span>
+            <strong className="text-content-primary dark:text-dark-primary font-semibold">{user?.email}</strong>
           </div>
         )}
       </div>
 
-      {/* 4 Stat Cards */}
+      {/* 4 Clean Statistics Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-dark-surface border border-dark-border space-y-2">
-          <div className="flex items-center justify-between text-dark-muted">
+        
+        {/* Total Scans */}
+        <div className="p-5 rounded-xl bg-white dark:bg-dark-surface border border-border dark:border-dark-border shadow-card space-y-1.5">
+          <div className="flex items-center justify-between text-content-secondary dark:text-dark-secondaryText">
             <span className="text-xs font-semibold uppercase tracking-wider">Total Scans</span>
-            <Activity className="w-4 h-4 text-brand-indigo" />
+            <Activity className="w-4 h-4 text-brand-teal" />
           </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-dark-text font-mono">
+          <p className="text-2xl sm:text-3xl font-extrabold text-content-primary dark:text-dark-primary font-mono">
             {stats?.totalScans ?? 0}
           </p>
-          <span className="text-[11px] text-emerald-400 block font-medium">
-            Active Threat Shielding
+          <span className="text-[11px] text-content-muted dark:text-dark-muted block">
+            Evaluated by rules & AI
           </span>
         </div>
 
-        <div className="p-5 rounded-2xl bg-dark-surface border border-dark-border space-y-2">
-          <div className="flex items-center justify-between text-dark-muted">
+        {/* Threats Blocked */}
+        <div className="p-5 rounded-xl bg-white dark:bg-dark-surface border border-border dark:border-dark-border shadow-card space-y-1.5">
+          <div className="flex items-center justify-between text-content-secondary dark:text-dark-secondaryText">
             <span className="text-xs font-semibold uppercase tracking-wider">Threats Neutralized</span>
-            <ShieldAlert className="w-4 h-4 text-rose-400" />
+            <ShieldAlert className="w-4 h-4 text-status-danger" />
           </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-rose-400 font-mono">
+          <p className="text-2xl sm:text-3xl font-extrabold text-status-danger font-mono">
             {stats?.threatsBlocked ?? 0}
           </p>
-          <span className="text-[11px] text-rose-300 block font-medium">
-            Phishing & Malicious QRs Blocked
+          <span className="text-[11px] text-status-danger font-medium block">
+            Phishing & Scams Blocked
           </span>
         </div>
 
-        <div className="p-5 rounded-2xl bg-dark-surface border border-dark-border space-y-2">
-          <div className="flex items-center justify-between text-dark-muted">
+        {/* Verified Safe */}
+        <div className="p-5 rounded-xl bg-white dark:bg-dark-surface border border-border dark:border-dark-border shadow-card space-y-1.5">
+          <div className="flex items-center justify-between text-content-secondary dark:text-dark-secondaryText">
             <span className="text-xs font-semibold uppercase tracking-wider">Verified Safe</span>
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <ShieldCheck className="w-4 h-4 text-status-success" />
           </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-emerald-400 font-mono">
+          <p className="text-2xl sm:text-3xl font-extrabold text-status-success font-mono">
             {stats?.safeCount ?? 0}
           </p>
-          <span className="text-[11px] text-dark-muted block">
-            Passed rule & AI verification
+          <span className="text-[11px] text-content-muted dark:text-dark-muted block">
+            Passed all security audits
           </span>
         </div>
 
-        <div className="p-5 rounded-2xl bg-dark-surface border border-dark-border space-y-2">
-          <div className="flex items-center justify-between text-dark-muted">
+        {/* Privacy Integrity */}
+        <div className="p-5 rounded-xl bg-white dark:bg-dark-surface border border-border dark:border-dark-border shadow-card space-y-1.5">
+          <div className="flex items-center justify-between text-content-secondary dark:text-dark-secondaryText">
             <span className="text-xs font-semibold uppercase tracking-wider">Privacy Integrity</span>
-            <Lock className="w-4 h-4 text-brand-cyan" />
+            <Lock className="w-4 h-4 text-brand-blue" />
           </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-brand-cyan font-mono">
+          <p className="text-2xl sm:text-3xl font-extrabold text-content-primary dark:text-dark-primary font-mono">
             100%
           </p>
-          <span className="text-[11px] text-dark-muted block">
-            0 Raw URLs/texts logged
+          <span className="text-[11px] text-content-muted dark:text-dark-muted block">
+            0 Raw URLs/texts stored
           </span>
         </div>
+
       </div>
 
-      {/* Visual Charts: Donut + Line Chart */}
+      {/* Visual Analytics: Donut Chart + Line Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Donut Chart: Verdict Distribution */}
-        <div className="lg:col-span-5 p-6 rounded-2xl bg-dark-surface border border-dark-border space-y-4">
+        <div className="lg:col-span-5 p-6 rounded-xl bg-white dark:bg-dark-surface border border-border dark:border-dark-border shadow-card space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-dark-text tracking-tight uppercase">
-              Threat Verdict Distribution
+            <h3 className="text-xs font-bold text-content-primary dark:text-dark-primary uppercase tracking-wider">
+              Verdict Breakdown
             </h3>
-            <span className="text-xs font-mono text-dark-muted">All Time</span>
+            <span className="text-[11px] font-mono text-content-muted dark:text-dark-muted">Cumulative</span>
           </div>
 
-          <div className="h-64 w-full flex items-center justify-center">
-            {stats?.totalScans > 0 ? (
+          <div className="h-60 w-full flex items-center justify-center">
+            {stats && stats.totalScans > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={stats.verdictDistribution}
-                    innerRadius={60}
-                    outerRadius={85}
+                    innerRadius={55}
+                    outerRadius={80}
                     paddingAngle={4}
                     dataKey="value"
                   >
                     {stats.verdictDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+                      <Cell key={`cell-${index}`} fill={chartColors[entry.name] || '#687782'} />
                     ))}
                   </Pie>
                   <RechartsTooltip
                     contentStyle={{
-                      backgroundColor: '#111936',
-                      borderColor: '#26325F',
-                      borderRadius: '12px',
-                      color: '#E5E9F7',
-                      fontSize: '12px'
+                      backgroundColor: '#FFFFFF',
+                      borderColor: '#E2E8E5',
+                      borderRadius: '8px',
+                      color: '#202B35',
+                      fontSize: '12px',
+                      boxShadow: '0 4px 6px -1px rgba(16, 24, 40, 0.08)'
                     }}
                   />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
               <div className="flex flex-col items-center justify-center text-center p-6 space-y-2">
-                <Radar className="w-12 h-12 text-dark-muted/40 animate-pulse" />
-                <p className="text-xs font-semibold text-dark-text">No scans recorded yet</p>
-                <p className="text-[11px] text-dark-muted max-w-xs">
-                  Run a scan using the live scanner to start populating real-time threat telemetry.
+                <Radar className="w-10 h-10 text-content-muted/50 animate-pulse" />
+                <p className="text-xs font-semibold text-content-primary dark:text-dark-primary">No scans recorded yet</p>
+                <p className="text-[11px] text-content-secondary dark:text-dark-secondaryText max-w-xs">
+                  Run a scan to see threat distribution telemetry.
                 </p>
                 <Link
                   to="/scan"
-                  className="mt-2 text-xs font-bold text-brand-cyan hover:underline"
+                  className="mt-2 text-xs font-semibold text-brand-teal hover:underline"
                 >
-                  Scan an item now →
+                  Run first scan →
                 </Link>
               </div>
             )}
           </div>
 
           {/* Legend */}
-          <div className="flex justify-around text-xs font-medium pt-2 border-t border-dark-border/40">
+          <div className="flex justify-around text-xs font-medium pt-2 border-t border-border dark:border-dark-border text-content-secondary dark:text-dark-secondaryText">
             <div className="flex items-center space-x-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-verdict-safe"></span>
+              <span className="w-2.5 h-2.5 rounded-full bg-status-success"></span>
               <span>Safe ({stats?.safeCount ?? 0})</span>
             </div>
             <div className="flex items-center space-x-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-verdict-suspicious"></span>
+              <span className="w-2.5 h-2.5 rounded-full bg-status-warning"></span>
               <span>Suspicious ({stats?.suspiciousCount ?? 0})</span>
             </div>
             <div className="flex items-center space-x-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-verdict-dangerous"></span>
+              <span className="w-2.5 h-2.5 rounded-full bg-status-danger"></span>
               <span>Dangerous ({stats?.dangerousCount ?? 0})</span>
             </div>
           </div>
         </div>
 
         {/* Line Chart: Scans Over Time */}
-        <div className="lg:col-span-7 p-6 rounded-2xl bg-dark-surface border border-dark-border space-y-4">
+        <div className="lg:col-span-7 p-6 rounded-xl bg-white dark:bg-dark-surface border border-border dark:border-dark-border shadow-card space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-dark-text tracking-tight uppercase">
+            <h3 className="text-xs font-bold text-content-primary dark:text-dark-primary uppercase tracking-wider">
               Scan Velocity (Past 7 Days)
             </h3>
-            <span className="text-xs font-mono text-dark-muted">Live Activity</span>
+            <span className="text-[11px] font-mono text-content-muted dark:text-dark-muted">Telemetry Volume</span>
           </div>
 
-          <div className="h-64 w-full">
+          <div className="h-60 w-full">
             {stats?.scansOverTime ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={stats.scansOverTime}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#18224A" />
-                  <XAxis dataKey="date" stroke="#8B95B8" fontSize={11} />
-                  <YAxis stroke="#8B95B8" fontSize={11} allowDecimals={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#EDF1EF" />
+                  <XAxis dataKey="date" stroke="#89959D" fontSize={11} />
+                  <YAxis stroke="#89959D" fontSize={11} allowDecimals={false} />
                   <RechartsTooltip
                     contentStyle={{
-                      backgroundColor: '#111936',
-                      borderColor: '#26325F',
-                      borderRadius: '12px',
-                      color: '#E5E9F7',
-                      fontSize: '12px'
+                      backgroundColor: '#FFFFFF',
+                      borderColor: '#E2E8E5',
+                      borderRadius: '8px',
+                      color: '#202B35',
+                      fontSize: '12px',
+                      boxShadow: '0 4px 6px -1px rgba(16, 24, 40, 0.08)'
                     }}
                   />
                   <Line
                     type="monotone"
                     dataKey="scans"
-                    stroke="#22D3EE"
-                    strokeWidth={3}
-                    dot={{ fill: '#6366F1', r: 4 }}
-                    activeDot={{ r: 6 }}
+                    stroke="#167D73"
+                    strokeWidth={2.5}
+                    dot={{ fill: '#167D73', r: 3 }}
+                    activeDot={{ r: 5 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -258,20 +274,20 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* Top Scam Categories (Only displayed if categories exist) */}
+      {/* Top Scam Categories (if data exists) */}
       {stats?.topCategories && stats.topCategories.length > 0 && stats.totalScans > 0 && (
-        <div className="p-6 rounded-2xl bg-dark-surface border border-dark-border space-y-4">
-          <h3 className="text-sm font-bold text-dark-text tracking-tight uppercase">
+        <div className="p-6 rounded-xl bg-white dark:bg-dark-surface border border-border dark:border-dark-border shadow-card space-y-4">
+          <h3 className="text-xs font-bold text-content-primary dark:text-dark-primary uppercase tracking-wider">
             Top Detected Scam Categories
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             {stats.topCategories.map((cat, idx) => (
-              <div key={idx} className="p-3.5 rounded-xl bg-dark-elevated border border-dark-border/80 flex items-center justify-between">
+              <div key={idx} className="p-3.5 rounded-lg bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-dark-muted uppercase font-mono block">Category #{idx + 1}</span>
-                  <span className="text-xs font-bold text-dark-text">{cat.name}</span>
+                  <span className="text-[10px] text-content-muted dark:text-dark-muted uppercase font-mono block">Rank #{idx + 1}</span>
+                  <span className="text-xs font-bold text-content-primary dark:text-dark-primary">{cat.name}</span>
                 </div>
-                <span className="text-sm font-mono font-extrabold text-brand-cyan">{cat.count}</span>
+                <span className="text-sm font-mono font-bold text-brand-teal">{cat.count}</span>
               </div>
             ))}
           </div>
@@ -280,27 +296,27 @@ export default function DashboardPage() {
 
       {/* Recent Scans Table (Logged-in User) */}
       {isAuthenticated && (
-        <div className="p-6 rounded-2xl bg-dark-surface border border-dark-border space-y-4">
+        <div className="p-6 rounded-xl bg-white dark:bg-dark-surface border border-border dark:border-dark-border shadow-card space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h3 className="text-sm font-bold text-dark-text tracking-tight uppercase">
+              <h3 className="text-xs font-bold text-content-primary dark:text-dark-primary uppercase tracking-wider">
                 Your Scan Audit Log
               </h3>
-              <p className="text-xs text-dark-muted mt-0.5">
+              <p className="text-xs text-content-secondary dark:text-dark-secondaryText mt-0.5">
                 Masked identifiers with salted hashes (Zero raw URLs or messages stored).
               </p>
             </div>
 
             {/* Verdict Filter */}
-            <div className="flex items-center space-x-1.5 p-1 rounded-xl bg-dark-elevated border border-dark-border text-xs">
+            <div className="flex items-center space-x-1 p-1 rounded-lg bg-canvas-subtle dark:bg-dark-secondary border border-border dark:border-dark-border text-xs">
               {['all', 'dangerous', 'suspicious', 'safe'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setVerdictFilter(tab)}
-                  className={`px-3 py-1 rounded-lg font-medium capitalize transition-colors ${
+                  className={`px-3 py-1 rounded-md font-medium capitalize transition-colors ${
                     verdictFilter === tab
-                      ? 'bg-brand-indigo text-white'
-                      : 'text-dark-muted hover:text-dark-text'
+                      ? 'bg-white dark:bg-dark-surface text-brand-teal font-semibold shadow-subtle'
+                      : 'text-content-secondary dark:text-dark-secondaryText hover:text-content-primary'
                   }`}
                 >
                   {tab}
@@ -313,45 +329,45 @@ export default function DashboardPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-dark-border text-dark-muted font-mono uppercase text-[10px]">
-                    <th className="py-3 px-3">Type</th>
-                    <th className="py-3 px-3">Zero-Knowledge ID</th>
-                    <th className="py-3 px-3">Verdict</th>
-                    <th className="py-3 px-3">Risk Score</th>
-                    <th className="py-3 px-3">Threat Category</th>
-                    <th className="py-3 px-3">Timestamp</th>
+                  <tr className="border-b border-border dark:border-dark-border text-content-muted dark:text-dark-muted font-mono uppercase text-[10px]">
+                    <th className="py-2.5 px-3">Type</th>
+                    <th className="py-2.5 px-3">Zero-Knowledge ID</th>
+                    <th className="py-2.5 px-3">Verdict</th>
+                    <th className="py-2.5 px-3">Risk Score</th>
+                    <th className="py-2.5 px-3">Category</th>
+                    <th className="py-2.5 px-3">Timestamp</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-dark-border/40 font-mono">
+                <tbody className="divide-y divide-border/60 dark:divide-dark-border/40 font-mono">
                   {filteredHistory.map((item) => {
                     const isDangerous = item.verdict === 'dangerous';
                     const isSuspicious = item.verdict === 'suspicious';
                     const badgeClass = isDangerous
-                      ? 'text-rose-400 bg-rose-500/10 border-rose-500/30'
+                      ? 'text-status-danger bg-status-danger-bg border-status-danger-border'
                       : isSuspicious
-                      ? 'text-amber-400 bg-amber-500/10 border-amber-500/30'
-                      : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
+                      ? 'text-status-warning bg-status-warning-bg border-status-warning-border'
+                      : 'text-status-success bg-status-success-bg border-status-success-border';
 
                     return (
-                      <tr key={item.id} className="hover:bg-dark-elevated/40 transition-colors">
-                        <td className="py-3 px-3 uppercase font-bold text-brand-cyan">
+                      <tr key={item.id} className="hover:bg-canvas-subtle/50 dark:hover:bg-dark-secondary/30 transition-colors">
+                        <td className="py-2.5 px-3 uppercase font-bold text-brand-teal">
                           {item.input_type}
                         </td>
-                        <td className="py-3 px-3 text-dark-text">
+                        <td className="py-2.5 px-3 text-content-primary dark:text-dark-primary">
                           {item.masked_identifier}
                         </td>
-                        <td className="py-3 px-3">
+                        <td className="py-2.5 px-3">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${badgeClass}`}>
                             {item.verdict}
                           </span>
                         </td>
-                        <td className="py-3 px-3 font-bold text-dark-text">
+                        <td className="py-2.5 px-3 font-bold text-content-primary dark:text-dark-primary">
                           {item.risk_score} / 100
                         </td>
-                        <td className="py-3 px-3 font-sans text-dark-muted">
+                        <td className="py-2.5 px-3 font-sans text-content-secondary dark:text-dark-secondaryText">
                           {item.scam_category || 'N/A'}
                         </td>
-                        <td className="py-3 px-3 text-dark-muted text-[11px]">
+                        <td className="py-2.5 px-3 text-content-muted dark:text-dark-muted text-[11px]">
                           {new Date(item.created_at).toLocaleString()}
                         </td>
                       </tr>
@@ -361,9 +377,9 @@ export default function DashboardPage() {
               </table>
             </div>
           ) : (
-            <div className="py-10 text-center text-xs text-dark-muted space-y-2">
-              <p>No scans recorded in your history yet.</p>
-              <Link to="/scan" className="text-brand-cyan font-semibold hover:underline">
+            <div className="py-8 text-center text-xs text-content-secondary dark:text-dark-secondaryText space-y-2">
+              <p>No scans found for the selected filter.</p>
+              <Link to="/scan" className="text-brand-teal font-semibold hover:underline">
                 Run your first scan on the scanner →
               </Link>
             </div>
