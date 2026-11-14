@@ -37,7 +37,7 @@ export default function VoiceAssistant({ className = '' }) {
     };
   }, []);
 
-  const { language, enabled, muted, volume, state, currentText, currentResultType } = voiceState;
+  const { language, enabled, muted, volume, state, engine, currentText, currentResultType } = voiceState;
 
   const handleLanguageChange = (langId) => {
     voiceAssistant.setLanguage(langId);
@@ -67,6 +67,10 @@ export default function VoiceAssistant({ className = '' }) {
 
   const handleReplay = () => {
     voiceAssistant.replay();
+  };
+
+  const handlePlayPreview = (type = 'safe') => {
+    voiceAssistant.playPreview(type);
   };
 
   const handleClearHistory = () => {
@@ -158,6 +162,27 @@ export default function VoiceAssistant({ className = '' }) {
             );
           })}
         </div>
+
+        {/* Test Audio Preview & Engine Indicator */}
+        <div className="flex items-center justify-between pt-1">
+          <button
+            type="button"
+            onClick={() => handlePlayPreview('safe')}
+            disabled={!enabled || state === 'generating' || state === 'speaking'}
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-brand-teal/10 hover:bg-brand-teal/20 text-brand-teal border border-brand-teal/30 transition-all disabled:opacity-50 shadow-subtle"
+          >
+            <Play className="w-3 h-3 fill-current" />
+            <span>Test {LANGUAGES.find(l => l.id === language)?.label || 'Voice'} Audio</span>
+          </button>
+
+          {/* Active Voice Engine Badge */}
+          <div className="flex items-center space-x-1.5 text-[10px] font-mono">
+            <span className={`w-2 h-2 rounded-full ${engine === 'elevenlabs' ? 'bg-status-success animate-pulse' : 'bg-status-warning'}`} />
+            <span className="text-content-secondary dark:text-dark-secondaryText">
+              {engine === 'elevenlabs' ? 'ElevenLabs AI' : 'Browser Engine'}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* 3. Audio Controls & Volume Bar */}
@@ -167,7 +192,7 @@ export default function VoiceAssistant({ className = '' }) {
           <button
             type="button"
             onClick={handlePlayPause}
-            disabled={!enabled || !currentResultType}
+            disabled={!enabled}
             title={state === 'speaking' ? 'Pause' : 'Play announcement'}
             className="w-8 h-8 rounded-lg bg-canvas-subtle dark:bg-dark-secondary hover:bg-canvas border border-border dark:border-dark-border flex items-center justify-center text-content-primary dark:text-dark-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-subtle"
           >
@@ -181,7 +206,7 @@ export default function VoiceAssistant({ className = '' }) {
           <button
             type="button"
             onClick={handleReplay}
-            disabled={!enabled || !currentResultType}
+            disabled={!enabled}
             title="Replay security announcement"
             className="w-8 h-8 rounded-lg bg-canvas-subtle dark:bg-dark-secondary hover:bg-canvas border border-border dark:border-dark-border flex items-center justify-center text-content-primary dark:text-dark-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-subtle"
           >

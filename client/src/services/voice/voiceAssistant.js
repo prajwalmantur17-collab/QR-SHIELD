@@ -27,6 +27,9 @@ export const ANNOUNCEMENT_TEXTS = {
   }
 };
 
+const DEFAULT_ELEVENLABS_KEY = 'sk_0bcfe5f407f9ec46661ee3ec51d11f08bb127c3e7e71f134';
+const DEFAULT_VOICE_ID = 'lGMJWfnL2SVUwU7i6zQ7';
+
 function base64ToBlobUrl(base64, mimeType = 'audio/mpeg') {
   try {
     const binStr = atob(base64);
@@ -55,6 +58,7 @@ class VoiceAssistantService {
     this.currentResultType = null;
     this.lastAnnouncedKey = null;
     this.state = 'ready'; // 'ready' | 'generating' | 'speaking' | 'paused' | 'completed' | 'error'
+    this.engine = 'elevenlabs'; // 'elevenlabs' | 'browser_fallback'
     this.subscribers = new Set();
 
     // Auto-unlock audio permission on user's first interaction
@@ -97,6 +101,7 @@ class VoiceAssistantService {
       muted: this.muted,
       volume: this.volume,
       state: this.state,
+      engine: this.engine,
       currentText: this.currentText,
       currentResultType: this.currentResultType
     };
@@ -205,6 +210,48 @@ class VoiceAssistantService {
     }
   }
 
+  // Helper to fetch direct from ElevenLabs if backend route is unavailable or offline
+  async fetchDirectElevenLabs(text) {
+    const directKey = (import.meta.env.VITE_ELEVENLABS_API_KEY || DEFAULT_ELEVENLABS_KEY || '').trim();
+    const voiceId = (import.meta.env.VITE_ELEVENLABS_VOICE_ID || DEFAULT_VOICE_ID || '').trim();
+
+    if (!directKey || directKey === 'your_elevenlabs_api_key_here') {
+      return null;
+    }
+
+    try {
+      const resp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'audio/mpeg',
+          'Content-Type': 'application/json',
+          'xi-api-key': directKey
+        },
+        body: JSON.stringify({
+          text,
+          model_id: 'eleven_multilingual_v2',
+          voice_settings: {
+            stability: 0.55,
+            similarity_boost: 0.8,
+            style: 0.0,
+            use_speaker_boost: true
+          }
+        })
+      });
+
+      if (!resp.ok) {
+        console.warn('[Voice Assistant] Direct ElevenLabs status:', resp.status);
+        return null;
+      }
+
+      const blob = await resp.blob();
+      return URL.createObjectURL(blob);
+    } catch (e) {
+      console.warn('[Voice Assistant] Direct ElevenLabs fetch error:', e);
+      return null;
+    }
+  }
+
   // Announce security scan result
   async announce(resultType, scanHash = null, forceReplay = false) {
     if (!this.enabled || this.muted) return;
@@ -236,28 +283,42 @@ class VoiceAssistantService {
       let audioUrl = this.audioCache.get(cacheKey);
 
       if (!audioUrl) {
-        const res = await api.post('/voice/announce', {
-          language: this.language,
-          resultType: normalizedType
-        });
+        // 1. Try Backend API first (with server cache)
+        try {
+          const res = await api.post('/voice/announce', {
+            language: this.language,
+            resultType: normalizedType
+          });
 
-        if (res.data?.audioBase64) {
-          audioUrl = base64ToBlobUrl(res.data.audioBase64, res.data.mimeType || 'audio/mpeg');
-          this.audioCache.set(cacheKey, audioUrl);
-        } else if (res.data?.fallback) {
-          // ElevenLabs unavailable or not configured: trigger Web Speech API fallback
-          this.speakBrowserSpeech(this.currentText, this.language);
-          return;
+          if (res.data?.audioBase64) {
+            audioUrl = base64ToBlobUrl(res.data.audioBase64, res.data.mimeType || 'audio/mpeg');
+            this.audioCache.set(cacheKey, audioUrl);
+            this.engine = 'elevenlabs';
+          }
+        } catch (apiErr) {
+          console.warn('[Voice Assistant] Backend voice endpoint unreachable/404, using direct ElevenLabs fallback...');
+        }
+
+        // 2. Direct ElevenLabs Client Fallback if backend was offline or didn't return audio
+        if (!audioUrl) {
+          audioUrl = await this.fetchDirectElevenLabs(this.currentText);
+          if (audioUrl) {
+            this.audioCache.set(cacheKey, audioUrl);
+            this.engine = 'elevenlabs';
+          }
         }
       }
 
       if (audioUrl) {
+        this.engine = 'elevenlabs';
         this.playAudioSource(audioUrl);
       } else {
+        this.engine = 'browser_fallback';
         this.speakBrowserSpeech(this.currentText, this.language);
       }
     } catch (err) {
-      console.warn('[Voice Assistant] ElevenLabs API error, falling back to browser speech:', err);
+      console.warn('[Voice Assistant] Voice generation failed, using browser speech:', err);
+      this.engine = 'browser_fallback';
       this.speakBrowserSpeech(this.currentText, this.language);
     }
   }
@@ -290,6 +351,7 @@ class VoiceAssistantService {
 
       this.audioElement.onerror = (e) => {
         console.warn('[Voice Assistant] Audio element error, attempting speech synthesis fallback:', e);
+        this.engine = 'browser_fallback';
         this.speakBrowserSpeech(this.currentText, this.language);
       };
 
@@ -303,10 +365,12 @@ class VoiceAssistantService {
           })
           .catch((e) => {
             console.warn('[Voice Assistant] Playback blocked by browser autoplay policy, attempting speech synthesis:', e);
+            this.engine = 'browser_fallback';
             this.speakBrowserSpeech(this.currentText, this.language);
           });
       }
     } catch (err) {
+      this.engine = 'browser_fallback';
       this.speakBrowserSpeech(this.currentText, this.language);
     }
   }
@@ -369,10 +433,14 @@ class VoiceAssistantService {
   }
 
   replay() {
-    if (this.currentResultType) {
-      this.logActivity('Voice announcement played');
-      this.announce(this.currentResultType, null, true);
-    }
+    const targetType = this.currentResultType || 'safe';
+    this.logActivity(`Voice announcement replayed (${targetType})`);
+    this.announce(targetType, null, true);
+  }
+
+  playPreview(resultType = 'safe') {
+    this.logActivity(`Voice sample preview (${this.language.toUpperCase()} - ${resultType})`);
+    this.announce(resultType, null, true);
   }
 
   // Background pre-fetch for instant audio playback upon scan
@@ -382,12 +450,25 @@ class VoiceAssistantService {
     for (const type of types) {
       const cacheKey = `${lang}_${type}`;
       if (!this.audioCache.has(cacheKey)) {
+        let audioUrl = null;
         try {
           const res = await api.post('/voice/announce', { language: lang, resultType: type });
           if (res.data?.audioBase64) {
-            this.audioCache.set(cacheKey, base64ToBlobUrl(res.data.audioBase64, res.data.mimeType || 'audio/mpeg'));
+            audioUrl = base64ToBlobUrl(res.data.audioBase64, res.data.mimeType || 'audio/mpeg');
+            this.audioCache.set(cacheKey, audioUrl);
           }
         } catch (_) {}
+
+        // Direct fetch fallback if backend fails
+        if (!audioUrl) {
+          const text = ANNOUNCEMENT_TEXTS[lang]?.[type];
+          if (text) {
+            const directUrl = await this.fetchDirectElevenLabs(text);
+            if (directUrl) {
+              this.audioCache.set(cacheKey, directUrl);
+            }
+          }
+        }
       }
     }
   }

@@ -1,4 +1,12 @@
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import axios from 'axios';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 /**
  * QR SHIELD Multilingual Announcement Dictionary
@@ -28,8 +36,8 @@ export const ANNOUNCEMENTS = {
 export const SUPPORTED_LANGUAGES = ['en', 'kn', 'hi'];
 export const SUPPORTED_RESULTS = ['safe', 'suspicious', 'dangerous', 'failed'];
 
-// Default ElevenLabs voice ID (Rachel - clear, natural, professional multilingual voice)
-const DEFAULT_VOICE_ID = process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM';
+// Default ElevenLabs voice ID
+const DEFAULT_VOICE_ID = process.env.ELEVENLABS_VOICE_ID || 'lGMJWfnL2SVUwU7i6zQ7';
 
 // In-memory binary cache for generated announcements
 // Key: `${language}_${resultType}`
